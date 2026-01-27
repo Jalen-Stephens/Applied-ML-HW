@@ -1,20 +1,24 @@
 ---
-title: Applied ML HW1 - Non-AI Notes
-emoji: 📝
+title: Applied ML HW1 - Complete Assignment
+emoji: 🎓
 colorFrom: blue
 colorTo: purple
 sdk: gradio
 sdk_version: 6.3.0
-app_file: space_app.py
+app_file: app_AI.py
 pinned: false
 license: mit
 ---
 
-# Applied ML HW1 - Non-AI Notes
+# Applied ML HW1 - Complete Assignment
 
-This Space displays my thought process and approach to solving the Applied ML homework problems.
+This Space contains my complete Applied ML homework assignment with interactive Gradio interfaces for:
+- Part A: Neural network comparison (Sigmoid vs Step activation functions)
+- Part B: Perceptron lab visualizations and Star Wars character death prediction
+- Part C: Additional assignments
 
 ## Files
 
-- `non_ai_notes.md` - My notes and thought process
-- `space_app.py` - Gradio app to display the notes
+- `app_AI.py` - Main Gradio application with all homework parts
+- `non_ai_notes.md` - My thought process and approach to solving the problems
+- `requirements.txt` - Python dependencies
