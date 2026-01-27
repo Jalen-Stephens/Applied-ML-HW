@@ -5,7 +5,7 @@ colorFrom: blue
 colorTo: purple
 sdk: gradio
 sdk_version: 6.3.0
-app_file: app_AI.py
+app_file: app.py
 pinned: false
 license: mit
 ---
@@ -19,6 +19,6 @@ This Space contains my complete Applied ML homework assignment with interactive 
 
 ## Files
 
-- `app_AI.py` - Main Gradio application with all homework parts
+- `app.py` - Main Gradio application with all homework parts
 - `non_ai_notes.md` - My thought process and approach to solving the problems
 - `requirements.txt` - Python dependencies
