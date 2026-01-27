@@ -12,7 +12,7 @@ license: mit
 
 # Applied ML HW1 - Complete Assignment
 
-This Space contains my complete Applied ML homework assignment with interactive Gradio interfaces for:
+This Space contains my complete Applied ML homework 1 assignment with interactive Gradio interfaces for:
 - Part A: Neural network comparison (Sigmoid vs Step activation functions)
 - Part B: Perceptron lab visualizations and Star Wars character death prediction
 - Part C: Additional assignments
