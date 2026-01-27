@@ -41,6 +41,7 @@ env/
 Thumbs.db
 
 # Data files (optional - uncomment if you don't want to track data)
+data/
 data/**/*.png
 data/**/*.jpg
 data/**/*.jpeg
