@@ -1,8 +1,36 @@
-import os
+from pathlib import Path
+import os, zipfile
+from urllib.request import urlretrieve
+
+DATA_DIR = Path("data")
+
+def ensure_data():
+    if DATA_DIR.exists() and any(DATA_DIR.iterdir()):
+        print("✅ data/ already present")
+        return
+
+    url = os.environ.get("DATA_ZIP_URL")
+    if not url:
+        raise RuntimeError("DATA_ZIP_URL not set")
+
+    zip_path = Path("/tmp/data.zip")
+    print("⬇️ Downloading data.zip...")
+    urlretrieve(url, zip_path)
+
+    print("📦 Extracting data.zip...")
+    with zipfile.ZipFile(zip_path, "r") as z:
+        z.extractall(".")
+
+    if not DATA_DIR.exists():
+        raise RuntimeError("❌ data/ not found after extraction")
+
+    print("✅ Data ready")
+
+ensure_data()
+
 import random
 import time
 import sqlite3
-from pathlib import Path
 
 import gradio as gr
 import matplotlib.pyplot as plt
@@ -27,7 +55,6 @@ torch.manual_seed(SEED)
 # Constants
 IMG_SIZE = 32
 FLATTEN_SIZE = IMG_SIZE * IMG_SIZE  # 1024
-DATA_DIR = Path("data")
 SNORLAX_DIR = DATA_DIR / "snorlax"
 MUDKIP_DIR = DATA_DIR / "mudkip"
 HW1_DIR = Path(__file__).resolve().parent
