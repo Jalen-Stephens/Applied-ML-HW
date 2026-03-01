@@ -47,6 +47,7 @@ data/**/*.jpg
 data/**/*.jpeg
 data/**/*.db
 
+HW2/data_oceania_HW2
 
 # Model files (optional - uncomment if you don't want to track models)
 # *.pth
