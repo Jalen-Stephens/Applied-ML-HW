@@ -1780,7 +1780,7 @@ print("Conclusion: E[f(X)] is bigger than f(E[X])")
       <p>Using the inverse CDF method: sample \(U \sim \text{Uniform}(0,1)\), then \(z = F^{-1}(U)\).</p>
       <p><strong>Piecewise inverse:</strong>
       \[
-      z = \begin{cases} \mu + b\ln(2U), & U < \tfrac{1}{2} \\[4pt] \mu - b\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{cases}
+      z = \left\{\begin{array}{r@{\quad}l} \mu + b\ln(2U), & U < \tfrac{1}{2} \\[6pt] \mu - b\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{array}\right.
       \]
       So \(z = \mu + (\text{something involving } b \text{ and } U)\) as requested.</p>
       <p><strong>Compact one-line form (equivalent):</strong>
@@ -1789,7 +1789,7 @@ print("Conclusion: E[f(X)] is bigger than f(E[X])")
       \]</p>
       <p><strong>Can you differentiate wrt \(\mu\) and \(b\)?</strong> Yes. From the piecewise form: \(\frac{\partial z}{\partial \mu} = 1\), and
       \[
-      \frac{\partial z}{\partial b} = \begin{cases} \ln(2U), & U < \tfrac{1}{2} \\[4pt] -\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{cases}
+      \frac{\partial z}{\partial b} = \left\{\begin{array}{r@{\quad}l} \ln(2U), & U < \tfrac{1}{2} \\[6pt] -\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{array}\right.
       \]
       This works for the same reason as the Gaussian case: once \(z\) is a deterministic function of \((\mu, b)\) and a fixed noise source \(U\), gradients are well-defined.</p>
       <p class="muted" style="margin-top:10px;font-size:0.9rem;">The reparameterization trick \(z = \mu + \sigma\epsilon\) is from the VAE lecture (Lecture 11).</p>
@@ -1822,7 +1822,12 @@ print("Conclusion: E[f(X)] is bigger than f(E[X])")
       <li>Why is this a "collapse"? What information about \(\mathbf{x}\) is lost?</li>
       <li>Name one practical strategy to fight posterior collapse.</li>
     </ol>
-    <div class="answer-box tall"></div>
+    <div class="answer-box tall filled">
+      <p><strong>1.</strong> If the decoder is powerful enough (e.g. an autoregressive model), it can model \(p(\mathbf{x})\) directly without needing the latent variable. Since the ELBO balances reconstruction and KL regularization (worksheet ELBO split), the easiest way to minimize loss is to set \(q(\mathbf{z}|\mathbf{x}) \approx p(\mathbf{z}) = \mathcal{N}(0,I)\), which removes the KL penalty.</p>
+      <p><strong>2.</strong> When \(q(\mathbf{z}|\mathbf{x}) = p(\mathbf{z})\), the KL term becomes zero by definition (regularization term in the ELBO).</p>
+      <p><strong>3.</strong> This is called posterior collapse because the encoder output no longer depends on \(\mathbf{x}\). The latent variable carries no information about the input, even though the generative story assumes \(\mathbf{z}\) explains \(\mathbf{x}\) (MML book, latent-variable model).</p>
+      <p><strong>4.</strong> One practical fix (Lecture 11) is <strong>KL annealing</strong>: gradually increasing the KL weight so the encoder first learns to encode meaningful information before strong regularization pushes it toward the prior.</p>
+    </div>
   </div>
 </div>
 
