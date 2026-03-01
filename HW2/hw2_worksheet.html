@@ -1955,7 +1955,10 @@ description_notes</code></pre>
       <li><strong>Test leakage:</strong> Suppose you accidentally include some test images in your training set. Why is this a problem? What would happen to your reported metrics vs. real-world performance?</li>
       <li><strong>Why three splits?</strong> Why not just train and test? What role does the validation set play during model development? <em>Hint: think about what happens when you try 20 different hyperparameter settings and pick the one that does best on your test set.</em></li>
     </ol>
-    <div class="answer-box tall"></div>
+    <div class="answer-box tall filled">
+      <p><strong>Test leakage:</strong> Test leakage is a problem because it breaks the independence assumption between training and test data. If test images appear in training, the model can partially memorize them, which inflates reported test accuracy and makes performance look better than it actually is in the real world. The test set is supposed to measure generalization to unseen data, so contaminating it makes the evaluation unreliable.</p>
+      <p><strong>Why three splits?</strong> We need three splits because hyperparameter tuning is itself a form of learning. If we tune directly on the test set, we overfit to it. The validation set is used for model selection, while the test set is kept untouched for a final unbiased estimate of performance.</p>
+    </div>
   </div>
 
   <div class="callout fun">
@@ -1984,17 +1987,15 @@ class MuseumDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        # YOUR CODE HERE — return the number of images
-        pass
+        return len(self.image_files)
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.image_dir, self.image_files[idx])
         image = Image.open(img_path).convert('RGB')
-        # YOUR CODE HERE — apply self.transform if it exists
-        # Return image + row index (look up metadata later)
+        if self.transform is not None:
+            image = self.transform(image)
         return image, idx
 
-# TODO: define transforms
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -2004,8 +2005,18 @@ transform = transforms.Compose([
     ),
 ])
 
-train_dataset = ### YOUR CODE HERE ###
-train_loader  = ### YOUR CODE HERE ###
+train_image_dir = "data_oceania_HW2/train"
+train_csv_path  = "data_oceania_HW2/metadata.csv"
+
+train_dataset = MuseumDataset(train_image_dir, train_csv_path, transform=transform)
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=32,
+    shuffle=True,
+    num_workers=2,
+    pin_memory=True
+)
 
 # Visualize a batch
 import matplotlib.pyplot as plt
@@ -2024,12 +2035,16 @@ def show_batch(loader, n=8):
     plt.tight_layout()
     plt.show()
 
-show_batch(train_loader)</code></pre>
+show_batch(train_loader)
+</code></pre>
 
   <div class="exercise">
     <div class="ex-label">Checkpoint Question</div>
     <p>What happens if you skip the <code>Normalize</code> transform? How would this affect a pretrained model like ResNet?</p>
-    <div class="answer-box"></div>
+    <div class="answer-box filled">
+      <p>If you skip Normalize, the images are still in \([0,1]\) after <code>ToTensor()</code>, but they're not centered and scaled to match the ImageNet mean/std that a pretrained ResNet was trained on. That creates a distribution mismatch at the input, so the early layers activate differently than they did during pretraining, and performance usually drops or becomes unstable.</p>
+      <p>This is basically the same idea as feature scaling in tabular ML: even if the inputs are technically "valid," the model expects a specific scale and distribution.</p>
+    </div>
   </div>
 </div>
 
@@ -2038,6 +2053,7 @@ show_batch(train_loader)</code></pre>
   <h3>4.3 &nbsp; Random CNN Architecture</h3>
 
 <pre data-lang="python"><code>import numpy as np
+import torch
 import torch.nn as nn
 
 num_layers = np.random.randint(2, 6)
@@ -2046,11 +2062,17 @@ channels = [3] + [np.random.choice([16, 32, 64]) for _ in range(num_layers)]
 layers = []
 for i in range(num_layers):
     layers += [
-        nn.Conv2d(### YOUR CODE HERE ###),  # in_channels, out_channels, kernel_size, padding
-        nn.BatchNorm2d(### YOUR CODE HERE ###),
+        nn.Conv2d(
+            in_channels=channels[i],
+            out_channels=channels[i+1],
+            kernel_size=3,
+            padding=1
+        ),
+        nn.BatchNorm2d(channels[i+1]),
         nn.ReLU(),
-        ### YOUR CODE HERE ###,  # spatial downsampling
+        nn.MaxPool2d(kernel_size=2)  # spatial downsampling
     ]
+
 layers.append(nn.AdaptiveAvgPool2d(1))  # global average pooling
 layers.append(nn.Flatten())
 
@@ -2059,7 +2081,8 @@ random_cnn = nn.Sequential(*layers)
 # Test it
 x = torch.randn(1, 3, 224, 224)
 embedding = random_cnn(x)
-print(f"Layers: {num_layers}, Embedding dim: {embedding.shape[1]}")</code></pre>
+print(f"Layers: {num_layers}, Embedding dim: {embedding.shape[1]}")
+</code></pre>
 
   <div class="exercise reflect">
     <div class="ex-label">Exercise 14 — Why Random?</div>
@@ -2067,7 +2090,10 @@ print(f"Layers: {num_layers}, Embedding dim: {embedding.shape[1]}")</code></pre>
       <li>Why might a randomly-initialized CNN still produce meaningful embeddings?</li>
       <li>Does deeper always mean better clustering? What might go wrong?</li>
     </ol>
-    <div class="answer-box"></div>
+    <div class="answer-box filled">
+      <p><strong>1.</strong> Even with random weights, the CNN architecture itself imposes structure through local receptive fields and weight sharing, so it still captures basic spatial patterns like edges and textures. The model class already encodes an inductive bias, which can separate images in embedding space even without training. (MML book, Ch. 7.3 and Ch. 1.2)</p>
+      <p><strong>2.</strong> No. Adding more layers increases capacity, but without training it just stacks more random transformations. That can distort or compress useful structure instead of improving separation. More depth doesn't automatically mean better representations. (MML book, Ch. 6.8 and Ch. 1.3)</p>
+    </div>
   </div>
 </div>
 
@@ -2077,47 +2103,61 @@ print(f"Layers: {num_layers}, Embedding dim: {embedding.shape[1]}")</code></pre>
 
 <pre data-lang="python"><code>from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-import umap  # pip install umap-learn
+import umap
+import numpy as np
+import torch
+import matplotlib.pyplot as plt
 
-# Extract embeddings (no gradients needed!)
-embeddings = []
+# ---- Extract embeddings (no gradients needed!) ----
+embeddings_list = []
 indices_list = []
+
 random_cnn.eval()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+random_cnn = random_cnn.to(device)
+
 with torch.no_grad():
     for images, idxs in train_loader:
-        emb = ### YOUR CODE HERE ###  # pass images through the CNN
-        embeddings.append(emb)
+        images = images.to(device)
+        emb = random_cnn(images)          # pass images through the CNN
+        embeddings_list.append(emb.cpu()) # move to cpu for numpy later
         indices_list.append(idxs)
 
-embeddings = torch.cat(embeddings).numpy()
-all_idxs = torch.cat(indices_list).numpy()
+embeddings = torch.cat(embeddings_list, dim=0).numpy()
+all_idxs    = torch.cat(indices_list, dim=0).numpy()
 
-# Use metadata for coloring — try different columns!
-# e.g. artist_culture, region, medium_materials
+# ---- Use metadata for coloring ----
 metadata = train_dataset.metadata
-color_col = 'artist_culture'  # change me!
-label_strings = metadata[color_col].iloc[all_idxs].values
-unique_labels = list(set(label_strings))
+
+# Change this to: 'artist_culture', 'region', or 'medium_materials'
+color_col = "artist_culture"
+
+label_strings = metadata[color_col].iloc[all_idxs].astype(str).values
+unique_labels = list(dict.fromkeys(label_strings))  # stable unique labels
 color_ids = np.array([unique_labels.index(l) for l in label_strings])
 
-# Run all three methods
-pca_2d = PCA(n_components=2).fit_transform(embeddings)
-tsne_2d = TSNE(n_components=2, perplexity=30).fit_transform(embeddings)
+# ---- Run all three methods ----
+pca_2d  = PCA(n_components=2).fit_transform(embeddings)
+tsne_2d = TSNE(n_components=2, perplexity=30, init="random", learning_rate="auto").fit_transform(embeddings)
 umap_2d = umap.UMAP(n_components=2).fit_transform(embeddings)
 
-# Plot side by side
+# ---- Plot side by side ----
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-for ax, data, title in zip(axes,
+
+for ax, data, title in zip(
+    axes,
     [pca_2d, tsne_2d, umap_2d],
-    ['PCA', 't-SNE', 'UMAP']):
-    scatter = ax.scatter(data[:, 0], data[:, 1],
-                         c=color_ids, cmap='tab10', s=8, alpha=0.7)
+    ["PCA", "t-SNE", "UMAP"]
+):
+    scatter = ax.scatter(data[:, 0], data[:, 1], c=color_ids, cmap="tab10", s=8, alpha=0.7)
     ax.set_title(title)
     ax.set_xticks([]); ax.set_yticks([])
+
 plt.colorbar(scatter, ax=axes[-1])
-plt.suptitle(f'Colored by: {color_col}')
+plt.suptitle(f"Colored by: {color_col}")
 plt.tight_layout()
-plt.show()</code></pre>
+plt.show()
+</code></pre>
 
   <div class="exercise">
     <div class="ex-label">Exercise 15 — Compare the Three</div>
