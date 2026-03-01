@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HW 2 — Geometry, Metrics & VAEs</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf6f0;
+  --bg-warm: #f5ede3;
+  --ink: #2c2416;
+  --ink-light: #6b5d4f;
+  --accent: #c45d3e;
+  --accent-soft: #e8a690;
+  --blue: #3d6b8e;
+  --blue-soft: #a8c8de;
+  --green: #4a7c59;
+  --green-soft: #b5d4b8;
+  --purple: #6b4c7a;
+  --purple-soft: #c4aed0;
+  --yellow: #d4a843;
+  --yellow-soft: #f0dca0;
+  --kit-bg: #fff8ee;
+  --code-bg: #2c2416;
+  --grid-color: rgba(180, 165, 140, 0.2);
+  --pixel: 4px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Crimson Pro', Georgia, serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.7;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+}
+
+/* ── HEADER ── */
+.hw-header {
+  text-align: center;
+  padding: 48px 24px 40px;
+  margin-bottom: 48px;
+  border-bottom: 3px double var(--ink);
+  position: relative;
+}
+
+.hw-header h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.hw-header .subtitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 300;
+  color: var(--ink-light);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.hw-header .theme-line {
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--accent);
+  margin-top: 8px;
+}
+
+.hw-header .name-line {
+  margin-top: 24px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  color: var(--ink-light);
+}
+
+.hw-header .name-line span {
+  display: inline-block;
+  border-bottom: 1px solid var(--ink-light);
+  width: 200px;
+  margin-left: 8px;
+}
+
+/* ── PIXEL ART ── */
+.pixel-art {
+  display: inline-grid;
+  gap: 1px;
+  image-rendering: pixelated;
+  margin: 8px auto;
+}
+
+.pixel-creature {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 11), var(--pixel));
+  grid-template-rows: repeat(var(--rows, 11), var(--pixel));
+  gap: 0;
+  margin: 0 auto;
+}
+
+.pixel-creature .p {
+  width: var(--pixel);
+  height: var(--pixel);
+}
+
+/* ── PART HEADERS ── */
+.part-header {
+  margin: 56px 0 32px;
+  padding: 20px 28px;
+  background: var(--ink);
+  color: var(--bg);
+  position: relative;
+}
+
+.part-header h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.part-header .part-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  opacity: 0.6;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.part-header::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0, var(--accent) 8px,
+    transparent 8px, transparent 16px
+  );
+}
+
+/* ── SECTIONS ── */
+.section {
+  margin: 36px 0;
+}
+
+.section h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.section h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink-light);
+  margin: 16px 0 8px;
+}
+
+/* ── TOOLKIT BOXES ── */
+.toolkit {
+  background: var(--kit-bg);
+  border: 2px solid var(--yellow);
+  border-radius: 2px;
+  padding: 24px 28px;
+  margin: 24px 0;
+  position: relative;
+}
+
+.toolkit::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 12px;
+}
+
+.toolkit.blue {
+  border-color: var(--blue);
+  background: #f0f6fa;
+}
+.toolkit.blue::before { background: var(--blue); color: white; }
+
+.toolkit.green {
+  border-color: var(--green);
+  background: #f0f7f1;
+}
+.toolkit.green::before { background: var(--green); color: white; }
+
+.toolkit.purple {
+  border-color: var(--purple);
+  background: #f5f0f8;
+}
+.toolkit.purple::before { background: var(--purple); color: white; }
+
+.toolkit.red {
+  border-color: var(--accent);
+  background: #fdf3f0;
+}
+.toolkit.red::before { background: var(--accent); color: white; }
+
+/* ── EXERCISE BOXES ── */
+.exercise {
+  border-left: 4px solid var(--accent);
+  padding: 20px 24px;
+  margin: 24px 0;
+  background: white;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
+}
+
+.exercise .ex-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.exercise.compute {
+  border-left-color: var(--blue);
+}
+.exercise.compute .ex-label { color: var(--blue); }
+
+.exercise.reflect {
+  border-left-color: var(--purple);
+}
+.exercise.reflect .ex-label { color: var(--purple); }
+
+.exercise.code-ex {
+  border-left-color: var(--green);
+}
+.exercise.code-ex .ex-label { color: var(--green); }
+
+/* ── ANSWER BOXES ── */
+.answer-box {
+  border: 1.5px dashed var(--ink-light);
+  border-radius: 2px;
+  min-height: 80px;
+  margin: 12px 0;
+  padding: 12px;
+  background: rgba(255,255,255,0.5);
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.answer-box::after {
+  content: '✏️ your answer here';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(0,0,0,0.12);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.answer-box.filled::after {
+  content: '';
+}
+
+.answer-box.tall { min-height: 140px; }
+.answer-box.xtall { min-height: 200px; }
+
+/* ── CODE BLOCKS ── */
+pre {
+  background: var(--code-bg);
+  color: #e8dcc8;
+  padding: 20px 24px;
+  border-radius: 2px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 16px 0;
+  position: relative;
+}
+
+pre::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.4;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+  background: rgba(0,0,0,0.06);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* ── STEP LISTS ── */
+.steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+}
+
+.steps li {
+  counter-increment: step;
+  padding: 8px 0 8px 40px;
+  position: relative;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.steps.blue li::before { background: var(--blue); }
+.steps.green li::before { background: var(--green); }
+.steps.purple li::before { background: var(--purple); }
+
+/* ── DEFINITION BOXES ── */
+.definition {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.12);
+  padding: 20px 24px;
+  margin: 16px 0;
+  position: relative;
+}
+
+.definition::before {
+  content: 'Definition';
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-light);
+}
+
+/* ── PIXEL DRAWINGS ── */
+.pixel-divider {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin: 32px 0;
+  opacity: 0.5;
+}
+
+.pixel-divider .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+}
+
+/* ── FUN CALLOUTS ── */
+.callout {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  border-radius: 2px;
+  align-items: flex-start;
+}
+
+.callout.warning {
+  background: #fff3e0;
+  border: 1px solid var(--yellow);
+}
+
+.callout.think {
+  background: #f3e8ff;
+  border: 1px solid var(--purple-soft);
+}
+
+.callout.fun {
+  background: #e8f5e9;
+  border: 1px solid var(--green-soft);
+}
+
+.callout .emoji {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.callout .text {
+  font-size: 0.95rem;
+}
+
+/* ── TABLES ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.95rem;
+}
+
+th {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--ink);
+  background: var(--bg-warm);
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+/* ── MULTIPLE CHOICE ── */
+.mc-question {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.1);
+  padding: 20px 24px;
+  margin: 20px 0;
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.04);
+}
+
+.mc-question .q-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.mc-options {
+  list-style: none;
+  padding: 0;
+  margin-top: 12px;
+}
+
+.mc-options li {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: default;
+  display: flex;
+  gap: 10px;
+}
+
+.mc-options li:hover {
+  background: var(--bg-warm);
+  border-color: rgba(0,0,0,0.06);
+}
+
+.mc-options .letter {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.mc-options li.mc-correct {
+  background: rgba(76, 175, 80, 0.12);
+  border-color: var(--green, #4caf50);
+  border-width: 1.5px;
+}
+
+/* ── PIXEL CHARACTERS ── */
+.pixel-scene {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 24px;
+  margin: 24px 0;
+  padding: 16px;
+}
+
+.pixel-char {
+  text-align: center;
+}
+
+.pixel-char .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+
+/* ── INLINE PIXEL GRID ── */
+.pixel-grid {
+  display: inline-grid;
+  gap: 0px;
+  margin: 8px auto;
+}
+
+.pixel-grid .row {
+  display: flex;
+}
+
+.pixel-grid .c {
+  width: 5px;
+  height: 5px;
+}
+
+/* ── FLOW ARROW ── */
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.flow .node {
+  background: white;
+  border: 2px solid var(--ink);
+  padding: 10px 18px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.flow .arrow {
+  font-size: 1.2rem;
+  color: var(--accent);
+}
+
+/* ── MISC ── */
+.indent { margin-left: 24px; }
+.mt-sm { margin-top: 12px; }
+.mt-md { margin-top: 24px; }
+.mb-sm { margin-bottom: 12px; }
+.center { text-align: center; }
+.small { font-size: 0.9rem; }
+.muted { color: var(--ink-light); }
+.katex-display { margin: 16px 0; }
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 16px 0;
+}
+
+@media (max-width: 640px) {
+  .two-col { grid-template-columns: 1fr; }
+  .container { padding: 20px 16px; }
+  .hw-header h1 { font-size: 1.8rem; }
+}
+
+.page-break { page-break-before: always; }
+
+@media print {
+  body { background-image: none; }
+  .part-header { break-before: page; }
+  pre { white-space: pre-wrap; }
+}
+
+/* ── PIXEL ART INLINE SVGs ── */
+.pixel-inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+
+.highlight-box {
+  background: var(--yellow-soft);
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════ -->
+<!-- HEADER -->
+<!-- ══════════════════════════════════════════ -->
+<header class="hw-header">
+  <div class="subtitle">Applied Machine Learning — Columbia University</div>
+  <h1>Homework 2</h1>
+  <div style="font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:300; color:var(--ink-light); margin-top:4px;">
+    Geometry, Metrics, Dimensionality Reduction &amp; Variational Autoencoders
+  </div>
+
+  <!-- pixel art: little museum with columns -->
+  <div class="center" style="margin:24px 0 12px;">
+    <svg width="180" height="80" viewBox="0 0 36 16" style="image-rendering:pixelated;">
+      <!-- roof -->
+      <rect x="6" y="0" width="24" height="1" fill="#2c2416"/>
+      <rect x="4" y="1" width="28" height="1" fill="#2c2416"/>
+      <rect x="3" y="2" width="30" height="1" fill="#2c2416"/>
+      <!-- pediment -->
+      <rect x="3" y="3" width="30" height="1" fill="#d4a843"/>
+      <!-- columns -->
+      <rect x="5" y="4" width="2" height="8" fill="#2c2416"/>
+      <rect x="11" y="4" width="2" height="8" fill="#2c2416"/>
+      <rect x="17" y="4" width="2" height="8" fill="#c45d3e"/>
+      <rect x="23" y="4" width="2" height="8" fill="#2c2416"/>
+      <rect x="29" y="4" width="2" height="8" fill="#2c2416"/>
+      <!-- base -->
+      <rect x="3" y="12" width="30" height="1" fill="#d4a843"/>
+      <rect x="2" y="13" width="32" height="1" fill="#2c2416"/>
+      <!-- door -->
+      <rect x="15" y="8" width="6" height="4" fill="#6b5d4f"/>
+      <!-- little paintings on walls -->
+      <rect x="7" y="6" width="3" height="3" fill="#3d6b8e"/>
+      <rect x="25" y="6" width="3" height="3" fill="#c45d3e"/>
+      <!-- steps -->
+      <rect x="1" y="14" width="34" height="1" fill="#6b5d4f"/>
+      <rect x="0" y="15" width="36" height="1" fill="#6b5d4f"/>
+    </svg>
+  </div>
+
+  <div class="theme-line">
+    How do we measure similarity? How do we compress information?<br>
+    How do we learn meaningful embeddings?
+  </div>
+
+  <div class="name-line">
+    Name: <span></span> &nbsp;&nbsp; UNI: <span></span>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ══════════════════════════════════════════ -->
+<div style="background:white; padding:24px 28px; margin-bottom:40px; border:1px solid rgba(0,0,0,0.08);">
+  <div style="font-family:'Outfit',sans-serif; font-size:0.75rem; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--ink-light); margin-bottom:12px;">Road Map</div>
+  <table style="margin:0;">
+    <tr><td style="width:40px;font-family:'Outfit',sans-serif;font-weight:600;color:var(--accent);">I</td><td>Distances, Metrics &amp; the Geometry of Data</td></tr>
+    <tr><td style="font-family:'Outfit',sans-serif;font-weight:600;color:var(--blue);">II</td><td>Dimensionality Reduction — PCA to Probabilistic PCA to Factor Analysis</td></tr>
+    <tr><td style="font-family:'Outfit',sans-serif;font-weight:600;color:var(--green);">III</td><td>Variational Autoencoders — Theory</td></tr>
+    <tr><td style="font-family:'Outfit',sans-serif;font-weight:600;color:var(--purple);">IV</td><td>Practical: Museum Embeddings &amp; Visualization</td></tr>
+    <tr><td style="font-family:'Outfit',sans-serif;font-weight:600;color:var(--yellow);">V</td><td>Multiple Choice Checkpoint</td></tr>
+  </table>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PART I — DISTANCES, METRICS & GEOMETRY                     -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part-header">
+  <span class="part-num">Part I</span>
+  <h2>Distances, Metrics &amp; the Geometry of Data</h2>
+</div>
+
+<!-- ── 1.1 What Is a Metric? ── -->
+<div class="section">
+  <h3>1.1 &nbsp; What Is a Metric?</h3>
+
+  <p>Before we can talk about which images are "similar," we need a way to measure distance. Not every function that <em>looks</em> like a distance actually behaves like one.</p>
+
+  <div class="definition">
+    A function \(d(x,y)\) is a <strong>metric</strong> if it satisfies four properties:
+
+    <table style="margin-top:12px;">
+      <tr>
+        <th style="width:50%;">Property</th>
+        <th>Formula</th>
+      </tr>
+      <tr>
+        <td>1. Non-negativity</td>
+        <td>\(d(x,y) \geq 0\)</td>
+      </tr>
+      <tr>
+        <td>2. Identity of indiscernibles</td>
+        <td>\(d(x,y) = 0 \iff x = y\)</td>
+      </tr>
+      <tr>
+        <td>3. Symmetry</td>
+        <td>\(d(x,y) = d(y,x)\)</td>
+      </tr>
+      <tr>
+        <td>4. Triangle inequality</td>
+        <td>\(d(x,z) \leq d(x,y) + d(y,z)\)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- pixel art: triangle with labeled vertices -->
+  <div class="center" style="margin:20px 0;">
+    <svg width="240" height="130" viewBox="0 0 48 26" style="image-rendering:pixelated;">
+      <!-- triangle edges -->
+      <line x1="4" y1="22" x2="24" y2="2" stroke="#c45d3e" stroke-width="0.8" stroke-dasharray="1.5"/>
+      <line x1="24" y1="2" x2="44" y2="22" stroke="#3d6b8e" stroke-width="0.8" stroke-dasharray="1.5"/>
+      <line x1="4" y1="22" x2="44" y2="22" stroke="#4a7c59" stroke-width="0.8" stroke-dasharray="1.5"/>
+      <!-- vertices (pixel dots) -->
+      <rect x="3" y="21" width="2" height="2" fill="#2c2416"/>
+      <rect x="23" y="1" width="2" height="2" fill="#2c2416"/>
+      <rect x="43" y="21" width="2" height="2" fill="#2c2416"/>
+      <!-- labels -->
+      <text x="1" y="26" font-family="Outfit" font-size="3" fill="#2c2416" font-weight="600">x</text>
+      <text x="23" y="0.8" font-family="Outfit" font-size="3" fill="#2c2416" font-weight="600" text-anchor="middle">y</text>
+      <text x="46" y="26" font-family="Outfit" font-size="3" fill="#2c2416" font-weight="600">z</text>
+      <!-- edge labels -->
+      <text x="11" y="11" font-family="Outfit" font-size="2.2" fill="#c45d3e" font-weight="500">d(x,y)</text>
+      <text x="33" y="11" font-family="Outfit" font-size="2.2" fill="#3d6b8e" font-weight="500">d(y,z)</text>
+      <text x="20" y="25.5" font-family="Outfit" font-size="2.2" fill="#4a7c59" font-weight="500">d(x,z)</text>
+    </svg>
+    <div class="small muted" style="margin-top:4px;">The triangle inequality says: the direct path is never longer than any detour.</div>
+  </div>
+
+  <div class="callout think">
+    <div class="emoji">🤔</div>
+    <div class="text"><strong>Why do we care?</strong> In ML, we constantly use distances — nearest neighbor classifiers, clustering, embedding spaces, loss functions. If our "distance" doesn't follow the metric axioms, algorithms can behave in bizarre ways. The triangle inequality is especially important: it's what makes nearest-neighbor search efficient.</div>
+  </div>
+</div>
+
+<!-- ── EXERCISE 1: Euclidean Distance Proof ── -->
+<div class="section">
+  <h3>1.2 &nbsp; Exercise 1 — Prove Euclidean Distance Is a Metric</h3>
+
+  <p>Let \(d(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_2 = \sqrt{\sum_i (x_i - y_i)^2}\). Show it's a proper metric.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 1a — Non-negativity</div>
+    <p>Why is \(\|\mathbf{x} - \mathbf{y}\|_2 \geq 0\)? <em>Hint: you're taking a square root of a sum of squares.</em></p>
+    <div class="answer-box filled">
+      <p>We have
+      \[
+      d(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_2
+      = \sqrt{\sum_i (x_i - y_i)^2} \ge 0,
+      \]
+      because each term \((x_i - y_i)^2 \ge 0\) and the square root of a nonnegative
+      real number is also nonnegative (HW2 §1.1; MML-book, Def. 3.6).</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 1b — Identity of Indiscernibles</div>
+    <p>When exactly does \(\|\mathbf{x} - \mathbf{y}\|_2 = 0\)?</p>
+    <div class="answer-box filled">
+      <p>
+      \[
+      d(\mathbf{x}, \mathbf{y}) = 0
+      \iff \sqrt{\sum_i (x_i - y_i)^2} = 0
+      \iff \sum_i (x_i - y_i)^2 = 0.
+      \]
+      A sum of nonnegative terms is zero only if every term is zero, so
+      \(x_i - y_i = 0\) for all \(i\), hence \(\mathbf{x} = \mathbf{y}\)
+      (HW2 §1.1; MML-book, Def. 3.6).</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 1c — Symmetry</div>
+    <p>Show algebraically that \(\|\mathbf{x} - \mathbf{y}\|_2 = \|\mathbf{y} - \mathbf{x}\|_2\). <em>Hint: what happens when you square \((x_i - y_i)\) vs \((y_i - x_i)\)?</em></p>
+    <div class="answer-box filled">
+      <p>
+      \[
+      d(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_2
+      = \sqrt{\sum_i (x_i - y_i)^2}
+      = \sqrt{\sum_i (y_i - x_i)^2}
+      = \|\mathbf{y} - \mathbf{x}\|_2 = d(\mathbf{y}, \mathbf{x}),
+      \]
+      since \((x_i - y_i)^2 = (y_i - x_i)^2\) for each coordinate
+      (HW2 §1.1; MML-book, Def. 3.6).</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 1d — Triangle Inequality (guided)</div>
+    <p>This is the hard one! We'll do it step by step.</p>
+
+    <p><strong>Step 1:</strong> Write \(\|\mathbf{x} - \mathbf{z}\|_2\) by inserting \(\pm \mathbf{y}\):</p>
+    $$\|\mathbf{x} - \mathbf{z}\|_2 = \|(\mathbf{x} - \mathbf{y}) + (\mathbf{y} - \mathbf{z})\|_2$$
+
+    <p>Let \(\mathbf{a} = \mathbf{x} - \mathbf{y}\) and \(\mathbf{b} = \mathbf{y} - \mathbf{z}\). <strong>Step 2:</strong> Expand \(\|\mathbf{a} + \mathbf{b}\|_2^2\):</p>
+    <div class="answer-box filled">
+      <p>
+      \[
+      \|\mathbf{a}+\mathbf{b}\|_2^2 = (\mathbf{a}+\mathbf{b})^\top(\mathbf{a}+\mathbf{b})
+      = \mathbf{a}^\top\mathbf{a} + 2\mathbf{a}^\top\mathbf{b} + \mathbf{b}^\top\mathbf{b}
+      = \|\mathbf{a}\|_2^2 + 2\mathbf{a}^\top\mathbf{b} + \|\mathbf{b}\|_2^2.
+      \]
+      (Using \(\|\mathbf{v}\|_2^2 = \mathbf{v}^\top\mathbf{v}\); MML-book §3.3.)</p>
+    </div>
+
+    <p><strong>Step 3:</strong> Apply the <strong>Cauchy-Schwarz inequality</strong> \(|\mathbf{a}^T\mathbf{b}| \leq \|\mathbf{a}\|\|\mathbf{b}\|\) to bound the cross term:</p>
+    <div class="answer-box filled">
+      <p>By Cauchy–Schwarz,
+      \[
+      |\mathbf{a}^\top\mathbf{b}| \le \|\mathbf{a}\|_2\|\mathbf{b}\|_2
+      \quad\Rightarrow\quad \mathbf{a}^\top\mathbf{b} \le \|\mathbf{a}\|_2\|\mathbf{b}\|_2.
+      \]
+      So,
+      \[
+      \|\mathbf{a}+\mathbf{b}\|_2^2 = \|\mathbf{a}\|_2^2 + 2\mathbf{a}^\top\mathbf{b} + \|\mathbf{b}\|_2^2
+      \le \|\mathbf{a}\|_2^2 + 2\|\mathbf{a}\|_2\|\mathbf{b}\|_2 + \|\mathbf{b}\|_2^2.
+      \]
+      (MML-book §3.3, Cauchy–Schwarz.)</p>
+    </div>
+
+    <p><strong>Step 4:</strong> Factor as a perfect square and take the square root:</p>
+    <div class="answer-box filled">
+      <p>Using the expansion in Steps 2–3 and the Cauchy–Schwarz inequality, one obtains
+      \(\|\mathbf{a} + \mathbf{b}\|_2 \le \|\mathbf{a}\|_2 + \|\mathbf{b}\|_2\). With
+      \(\mathbf{a} = \mathbf{x} - \mathbf{y}\) and \(\mathbf{b} = \mathbf{y} - \mathbf{z}\),
+      this gives
+      \[
+      d(\mathbf{x}, \mathbf{z}) = \|\mathbf{x} - \mathbf{z}\|_2
+      \le \|\mathbf{x} - \mathbf{y}\|_2 + \|\mathbf{y} - \mathbf{z}\|_2
+      = d(\mathbf{x}, \mathbf{y}) + d(\mathbf{y}, \mathbf{z}),
+      \]
+      which is exactly the triangle inequality axiom (HW2 §1.1; MML-book, Def. 3.6).</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── 1.3 Things That Are NOT Metrics ── -->
+<div class="section">
+  <h3>1.3 &nbsp; Not Everything That Looks Like a Distance Is a Metric</h3>
+
+  <p>It's tempting to use any function that maps two things to a number as a "distance." But metrics have to earn their title. Let's look at some pretenders.</p>
+
+  <!-- pixel art: little "WANTED: NOT A METRIC" poster -->
+  <div class="center" style="margin:16px 0;">
+    <svg width="120" height="90" viewBox="0 0 24 18" style="image-rendering:pixelated;">
+      <rect x="0" y="0" width="24" height="18" fill="#f5ede3" stroke="#2c2416" stroke-width="0.8"/>
+      <rect x="1" y="1" width="22" height="3" fill="#c45d3e"/>
+      <text x="12" y="3.2" font-family="Outfit" font-size="2" fill="white" font-weight="700" text-anchor="middle">WANTED</text>
+      <text x="12" y="6.5" font-family="Outfit" font-size="1.5" fill="#2c2416" font-weight="500" text-anchor="middle">NOT A METRIC</text>
+      <!-- sad face -->
+      <circle cx="12" cy="12" r="3.5" fill="none" stroke="#2c2416" stroke-width="0.5"/>
+      <rect x="10" y="11" width="1" height="1" fill="#2c2416"/>
+      <rect x="13" y="11" width="1" height="1" fill="#2c2416"/>
+      <path d="M10 14 Q12 12.5 14 14" fill="none" stroke="#2c2416" stroke-width="0.4"/>
+    </svg>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 2a — Signed Difference</div>
+    <p>Consider \(d(x,y) = x - y\) on the real numbers. Which metric property does it violate? Give a concrete counterexample with numbers.</p>
+    <div class="answer-box filled">
+      <p><strong>Violates:</strong> Non-negativity (distances must be \(\ge 0\)). (HW2 §1.1; MML-book, Def. 3.6.)</p>
+      <p><strong>Counterexample:</strong> Take \(x=0\), \(y=1\). Then
+      \[
+      d(0,1) = 0 - 1 = -1 < 0,
+      \]
+      so it's not a metric.</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 2b — Squared Absolute Difference</div>
+    <p>Consider \(d(x,y) = |x - y|^2\). It satisfies non-negativity, identity of indiscernibles, and symmetry. But does it satisfy the triangle inequality?</p>
+
+    <p><em>Try \(x=0, y=2, z=4\). Compute all three distances. Does it hold?</em></p>
+    <div class="answer-box filled">
+      <p>With \(x=0\), \(y=2\), \(z=4\):
+      \[
+      d(0,4) = |0-4|^2 = 16, \quad d(0,2) = |0-2|^2 = 4, \quad d(2,4) = |2-4|^2 = 4.
+      \]
+      Triangle inequality requires \(d(0,4) \le d(0,2) + d(2,4)\), but \(16 \not\le 4+4 = 8\). So it <strong>violates the triangle inequality</strong>, hence it's not a metric. (HW2 §1.1; MML-book, Def. 3.6.)</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 2c — Build Your Own Fake Metric</div>
+    <p>Construct a function \(d(x,y)\) that satisfies properties 1–3 (non-negativity, identity, symmetry) but <strong>violates</strong> the triangle inequality. <em>Explain why your example fails.</em></p>
+    <div class="answer-box filled tall">
+      <p>Define on \(\mathbb{R}\): \(d(x,y) = |x-y|^2\).</p>
+      <p><strong>Non-negativity:</strong> \(d(x,y) \ge 0\) (it's a square). <strong>Identity:</strong> \(d(x,y)=0 \iff |x-y|^2=0 \iff x=y\). <strong>Symmetry:</strong> \(|x-y|^2 = |y-x|^2\). So 1–3 hold (HW2 §1.1).</p>
+      <p><strong>Fails triangle inequality:</strong> Take \(x=0\), \(y=1\), \(z=2\). Then \(d(0,2)=4\), \(d(0,1)=1\), \(d(1,2)=1\). Triangle inequality would require \(4 \le 1+1=2\), which is false. So it violates the triangle inequality axiom (HW2 §1.1; MML-book, Def. 3.6).</p>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="emoji">⚠️</div>
+    <div class="text"><strong>Why this matters in ML:</strong> Cosine "distance" (1 − cosine similarity) is technically <em>not</em> a metric for arbitrary vectors. Neither is KL divergence! Knowing which axioms your "distance" satisfies tells you which algorithms and shortcuts (like triangle-inequality-based pruning) you can safely use.</div>
+  </div>
+</div>
+
+
+<!-- ── 1.4 Hyperbolic Geometry ── -->
+<div class="section">
+  <h3>1.4 &nbsp; Hyperbolic Geometry — When Flat Space Isn't Enough</h3>
+
+  <p>Imagine you have a taxonomy — a family tree of concepts:</p>
+
+  <!-- pixel art: tree -->
+  <div class="center" style="margin:16px 0;">
+    <svg width="280" height="140" viewBox="0 0 56 28" style="image-rendering:pixelated;">
+      <!-- edges -->
+      <line x1="28" y1="3" x2="14" y2="10" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="28" y1="3" x2="42" y2="10" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="14" y1="10" x2="7" y2="18" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="14" y1="10" x2="21" y2="18" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="42" y1="10" x2="35" y2="18" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="42" y1="10" x2="49" y2="18" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="7" y1="18" x2="4" y2="24" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="7" y1="18" x2="10" y2="24" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="21" y1="18" x2="18" y2="24" stroke="#6b5d4f" stroke-width="0.5"/>
+      <line x1="21" y1="18" x2="24" y2="24" stroke="#6b5d4f" stroke-width="0.5"/>
+      <!-- nodes -->
+      <circle cx="28" cy="3" r="2" fill="#c45d3e"/>
+      <circle cx="14" cy="10" r="2" fill="#3d6b8e"/>
+      <circle cx="42" cy="10" r="2" fill="#3d6b8e"/>
+      <circle cx="7" cy="18" r="1.5" fill="#4a7c59"/>
+      <circle cx="21" cy="18" r="1.5" fill="#4a7c59"/>
+      <circle cx="35" cy="18" r="1.5" fill="#4a7c59"/>
+      <circle cx="49" cy="18" r="1.5" fill="#4a7c59"/>
+      <circle cx="4" cy="24" r="1" fill="#d4a843"/>
+      <circle cx="10" cy="24" r="1" fill="#d4a843"/>
+      <circle cx="18" cy="24" r="1" fill="#d4a843"/>
+      <circle cx="24" cy="24" r="1" fill="#d4a843"/>
+      <!-- labels -->
+      <text x="28" y="1" font-family="Outfit" font-size="2" fill="#c45d3e" font-weight="600" text-anchor="middle">Art</text>
+      <text x="14" y="8" font-family="Outfit" font-size="1.6" fill="#3d6b8e" font-weight="500" text-anchor="middle">Renaissance</text>
+      <text x="42" y="8" font-family="Outfit" font-size="1.6" fill="#3d6b8e" font-weight="500" text-anchor="middle">Modern</text>
+      <text x="5" y="21.5" font-family="Outfit" font-size="1.3" fill="#4a7c59" text-anchor="middle">Italian</text>
+      <text x="21" y="21.5" font-family="Outfit" font-size="1.3" fill="#4a7c59" text-anchor="middle">French</text>
+      <text x="35" y="21.5" font-family="Outfit" font-size="1.3" fill="#4a7c59" text-anchor="middle">Cubism</text>
+      <text x="49" y="21.5" font-family="Outfit" font-size="1.3" fill="#4a7c59" text-anchor="middle">Abstract</text>
+    </svg>
+  </div>
+
+  <p>At each level the tree <strong>doubles</strong> in size. A tree of depth \(d\) has \(2^d\) leaves. The problem? In Euclidean space, the number of points you can pack at a given distance from the origin grows <em>polynomially</em>. But in <strong>hyperbolic space</strong>, circumference grows <em>exponentially</em> with radius — a perfect match!</p>
+
+  <div class="toolkit blue" data-label="Hyperbolic Distance — Poincaré Disk">
+    <p>In the Poincaré disk model (the unit disk \(\mathbb{D}^n = \{\mathbf{x} \in \mathbb{R}^n : \|\mathbf{x}\| < 1\}\)), the hyperbolic distance is:</p>
+
+    $$d_{\text{hyp}}(\mathbf{u}, \mathbf{v}) = \text{arcosh}\!\left(1 + 2\frac{\|\mathbf{u} - \mathbf{v}\|^2}{(1-\|\mathbf{u}\|^2)(1-\|\mathbf{v}\|^2)}\right)$$
+
+    <p>Key observations:</p>
+    <p style="margin-left:16px;">• As points approach the boundary (\(\|\mathbf{u}\| \to 1\)), the denominator \(\to 0\) and distance \(\to \infty\)</p>
+    <p style="margin-left:16px;">• Near the origin, the metric looks Euclidean</p>
+    <p style="margin-left:16px;">• This means the disk's "edge" has <em>exponentially more room</em> than the center</p>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 3a — Diverging Distances</div>
+    <p>Let \(\mathbf{u} = (r, 0)\) and \(\mathbf{v} = (-r, 0)\) in the Poincaré disk. Compute \(d_{\text{hyp}}(\mathbf{u}, \mathbf{v})\) as a function of \(r\). What happens as \(r \to 1\)?</p>
+    <div class="answer-box filled">
+      <p>For \(\mathbf{u}=(r,0)\) and \(\mathbf{v}=(-r,0)\): \(\|\mathbf{u}-\mathbf{v}\|^2 = \|(2r,0)\|^2 = 4r^2\). Also \(\|\mathbf{u}\|^2 = \|\mathbf{v}\|^2 = r^2\), so \((1-\|\mathbf{u}\|^2)(1-\|\mathbf{v}\|^2) = (1-r^2)^2\).</p>
+      <p>Plugging into the Poincaré disk formula:
+      \[
+      d_{\text{hyp}}(\mathbf{u},\mathbf{v})
+      = \operatorname{arcosh}\!\left(1 + 2\frac{4r^2}{(1-r^2)^2}\right)
+      = \operatorname{arcosh}\!\left(1 + \frac{8r^2}{(1-r^2)^2}\right).
+      \]</p>
+      <p>As \(r \to 1\), \((1-r^2)^2 \to 0\), so \(\frac{8r^2}{(1-r^2)^2} \to \infty\), hence
+      \[
+      d_{\text{hyp}}(\mathbf{u},\mathbf{v}) \to \infty,
+      \]
+      matching the observation that distance diverges near the boundary.</p>
+    </div>
+  </div>
+
+  <div class="exercise code-ex">
+    <div class="ex-label">Exercise 3b — Plot It</div>
+    <p>Write a short Python snippet to plot \(d_{\text{hyp}}\) vs. \(d_{\text{eucl}}\) for the pair \((r,0), (-r,0)\) as \(r\) goes from \(0\) to \(0.99\).</p>
+<pre data-lang="python"><code>import numpy as np
+import matplotlib.pyplot as plt
+
+r_vals = np.linspace(0.01, 0.99, 200)
+
+d_eucl = 2 * r_vals  # ||u - v|| = 2r
+
+# YOUR CODE HERE — compute d_hyp using the Poincaré formula
+# Hint: arcosh(1 + 2 * ||u-v||^2 / ((1-||u||^2)(1-||v||^2)))
+# What is ||u-v||^2 when u=(r,0) and v=(-r,0)?
+# What is (1-||u||^2)(1-||v||^2)?
+
+# Using Poincaré disk hyperbolic distance (MML-book § Hyperbolic Geometry)
+d_hyp = np.arccosh(1 + 8*r_vals**2 / (1 - r_vals**2)**2)
+
+plt.figure(figsize=(6, 4))
+plt.plot(r_vals, d_eucl, label='Euclidean', color='#3d6b8e')
+plt.plot(r_vals, d_hyp, label='Hyperbolic', color='#c45d3e')
+plt.xlabel('r')
+plt.ylabel('Distance')
+plt.legend()
+plt.title('Euclidean vs. Hyperbolic Distance')
+plt.tight_layout()
+plt.show()</code></pre>
+    <div class="answer-box tall filled" style="position:relative;">
+      <img src="3b_plot.png" alt="Euclidean vs. Hyperbolic Distance plot" style="max-width:100%; height:auto; display:block;" />
+    </div>
+  </div>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Reflection</div>
+    <p>In 2–3 sentences: why would hyperbolic embeddings work better for our museum taxonomy than Euclidean embeddings?</p>
+    <div class="answer-box filled">
+      <p>Hyperbolic space expands really fast as you move away from the center, which fits the way our sculpture dataset naturally branches out from broad to specific. You can start with big buckets like region or artist_culture, then split into date_range_ce, then into object_type and medium_materials, and eventually you're down to individual pieces (name, current_location, met_gallery, etc.). In Euclidean space, those deeper layers get cramped and you start losing clean separation, but hyperbolic space has way more "room" for that hierarchy, so it preserves those relationships better.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── 1.5 JENSEN'S INEQUALITY TOOLKIT ── -->
+<div class="section">
+  <h3>1.5 &nbsp; Theory Toolkit — Jensen's Inequality</h3>
+
+  <p>Jensen's inequality is one of the most useful tools in machine learning theory. Before we use it in proofs, let's build intuition for it piece by piece.</p>
+
+  <div class="toolkit" data-label="🧰 Jensen's Inequality Toolkit">
+    <p><strong>Statement:</strong> If \(f\) is a <strong>convex</strong> function, then for any random variable \(X\):</p>
+    $$f\!\big(\mathbb{E}[X]\big) \;\leq\; \mathbb{E}\!\big[f(X)\big]$$
+    <p style="margin-top:8px;">In words: <em>the function of the average is ≤ the average of the function.</em></p>
+    <p style="margin-top:4px;">Flip it for <strong>concave</strong> functions: \(f\!\big(\mathbb{E}[X]\big) \geq \mathbb{E}\!\big[f(X)\big]\).</p>
+  </div>
+
+  <h4>Warmup: What does "convex" mean?</h4>
+
+  <p>A function \(f\) is convex if the line segment between any two points on its graph lies <em>above</em> the graph. Algebraically:</p>
+  $$f\!\big(\lambda x + (1-\lambda)y\big) \;\leq\; \lambda\, f(x) + (1-\lambda)\, f(y) \qquad \forall\; \lambda \in [0,1]$$
+
+  <!-- pixel art: convex function with chord above -->
+  <div class="center" style="margin:16px 0;">
+    <svg width="240" height="140" viewBox="0 0 48 28" style="image-rendering:pixelated;">
+      <!-- axes -->
+      <line x1="4" y1="24" x2="44" y2="24" stroke="#6b5d4f" stroke-width="0.4"/>
+      <line x1="4" y1="24" x2="4" y2="2" stroke="#6b5d4f" stroke-width="0.4"/>
+      <!-- curve (x^2 ish) -->
+      <path d="M6 22 Q14 26 24 14 Q30 6 42 4" fill="none" stroke="#2c2416" stroke-width="1"/>
+      <!-- chord -->
+      <line x1="10" y1="22" x2="38" y2="5.5" stroke="#c45d3e" stroke-width="0.6" stroke-dasharray="1"/>
+      <!-- dots on curve -->
+      <circle cx="10" cy="22" r="1" fill="#3d6b8e"/>
+      <circle cx="38" cy="5.5" r="1" fill="#3d6b8e"/>
+      <!-- midpoint on chord vs curve -->
+      <circle cx="24" cy="13.75" r="0.8" fill="#c45d3e"/>
+      <circle cx="24" cy="14" r="0.8" fill="#4a7c59"/>
+      <!-- labels -->
+      <text x="8" y="26" font-family="Outfit" font-size="2" fill="#3d6b8e" font-weight="500">x</text>
+      <text x="39" y="4.5" font-family="Outfit" font-size="2" fill="#3d6b8e" font-weight="500">y</text>
+      <text x="26" y="13" font-family="Outfit" font-size="1.6" fill="#c45d3e">chord</text>
+      <text x="26" y="16" font-family="Outfit" font-size="1.6" fill="#4a7c59">f(avg)</text>
+      <!-- f label -->
+      <text x="42" y="8" font-family="Crimson Pro" font-size="2.5" fill="#2c2416" font-style="italic">f</text>
+    </svg>
+    <div class="small muted">The <span style="color:var(--accent);">red chord</span> (average of f) should always be above the <span style="color:var(--green);">green point</span> (f of the average),  regions that are conves.</div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 4a — Two Variables</div>
+    <p>Let \(f(x) = x^2\) (which is convex). Let \(x_1 = 1, x_2 = 5\), with equal weights \(\lambda = 0.5\).</p>
+    <ol class="steps">
+      <li>Compute the <strong>left side</strong>: \(f\!\big(\mathbb{E}[X]\big) = f\!\big(\tfrac{1+5}{2}\big) = f(3) = \;?\)</li>
+      <li>Compute the <strong>right side</strong>: \(\mathbb{E}[f(X)] = \tfrac{1}{2}f(1) + \tfrac{1}{2}f(5) = \;?\)</li>
+      <li>Verify: is left \(\leq\) right?</li>
+    </ol>
+    <div class="answer-box filled">
+      <p>For <strong>convex</strong> \(f\), \(f(\mathbb{E}[X]) \le \mathbb{E}[f(X)]\). Given \(f(x)=x^2\), \(x_1=1\), \(x_2=5\), and equal weights \(\lambda=0.5\):</p>
+      <p><strong>1. Left side:</strong>
+      \[
+      f(\mathbb{E}[X]) = f\Big(\tfrac{1+5}{2}\Big)= f(3)=3^2=9
+      \]</p>
+      <p><strong>2. Right side:</strong>
+      \[
+      \mathbb{E}[f(X)] = \tfrac{1}{2}f(1) + \tfrac{1}{2}f(5)
+      = \tfrac{1}{2}(1^2) + \tfrac{1}{2}(5^2)
+      = \tfrac{1}{2}(1) + \tfrac{1}{2}(25)
+      = 0.5 + 12.5
+      = 13
+      \]</p>
+      <p><strong>3. Verify:</strong> \(9 \le 13\): True.</p>
+      <p>So Jensen checks out: \(f(\mathbb{E}[X]) = 9\) and \(\mathbb{E}[f(X)] = 13\), and left \(\le\) right as expected for a convex function.</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 4b — Three Variables</div>
+    <p>Same \(f(x) = x^2\). Now \(x_1 = 2, x_2 = 4, x_3 = 12\), with equal weights \(\frac{1}{3}\) each.</p>
+    <ol class="steps">
+      <li>Compute \(f\!\big(\mathbb{E}[X]\big) = f\!\big(\tfrac{2+4+12}{3}\big)\)</li>
+      <li>Compute \(\mathbb{E}[f(X)] = \tfrac{1}{3}\big[f(2) + f(4) + f(12)\big]\)</li>
+      <li>Verify Jensen's.</li>
+    </ol>
+    <div class="answer-box filled">
+      <p>Same function \(f(x) = x^2\), with \(x_1 = 2\), \(x_2 = 4\), \(x_3 = 12\) and equal weights \(\frac{1}{3}\).</p>
+      <p><strong>1. Compute \(f(\mathbb{E}[X])\):</strong>
+      \[
+      \mathbb{E}[X] = \frac{2 + 4 + 12}{3} = \frac{18}{3} = 6
+      \]
+      \[
+      f(\mathbb{E}[X]) = f(6) = 6^2 = 36
+      \]</p>
+      <p><strong>2. Compute \(\mathbb{E}[f(X)]\):</strong>
+      \[
+      \mathbb{E}[f(X)] = \frac{1}{3}\left[f(2) + f(4) + f(12)\right]
+      \]
+      \[
+      = \frac{1}{3}\left[2^2 + 4^2 + 12^2\right] = \frac{1}{3}\left[4 + 16 + 144\right]
+      \]
+      \[
+      = \frac{164}{3} \approx 54.67
+      \]</p>
+      <p><strong>3. Verify Jensen's inequality:</strong> \(f(\mathbb{E}[X]) = 36\) and \(\mathbb{E}[f(X)] = \frac{164}{3} \approx 54.67\). Since \(36 \le \frac{164}{3}\), Jensen's inequality holds, as expected because \(x^2\) is convex.</p>
+    </div>
+  </div>
+
+  <div class="exercise code-ex">
+    <div class="ex-label">Exercise 4c — See It Geometrically</div>
+    <p>Plot \(f(x) = x^2\) on \([0, 14]\). On the same plot, mark the points \((2, f(2)), (4, f(4)), (12, f(12))\), their average \((\bar{x}, f(\bar{x}))\), and the chord connecting the outer points. Visually confirm Jensen's inequality.</p>
+<pre data-lang="python"><code>import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(0, 14, 200)
+f = x ** 2
+
+pts = np.array([2, 4, 12])
+avg_x = pts.mean()
+
+# Jensen quantities
+f_at_avg = avg_x ** 2
+Ef = np.mean(pts ** 2)
+
+plt.figure(figsize=(7, 5))
+plt.plot(x, f, 'k-', linewidth=1.5, label=r'$f(x)=x^2$')
+
+# Plot the three original points
+plt.scatter(pts, pts**2, s=70, label='(2,4), (4,16), (12,144)')
+
+# Plot f(E[X]) and E[f(X)]
+plt.scatter([avg_x], [f_at_avg], s=100, label=r'$f(\mathbb{E}[X])$')
+plt.scatter([avg_x], [Ef], s=100, label=r'$\mathbb{E}[f(X)]$')
+
+# Draw chord between outer points
+x_chord = np.array([pts.min(), pts.max()])
+y_chord = x_chord ** 2
+plt.plot(x_chord, y_chord, linestyle='--', linewidth=2, label='Chord (2 to 12)')
+
+plt.xlim(0, 14)
+plt.ylim(0, 200)
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.legend()
+
+# Which one is bigger?
+comparison_text = f"E[f(X)] = {Ef:.2f} > f(E[X]) = {f_at_avg:.2f}"
+plt.title("Jensen's Inequality - Geometric View\n" + comparison_text)
+
+plt.tight_layout()
+plt.show()
+
+print("avg_x =", avg_x)
+print("f(E[X]) =", f_at_avg)
+print("E[f(X)] =", Ef)
+print("Conclusion: E[f(X)] is bigger than f(E[X])")
+</code></pre>
+    <div class="answer-box tall filled">
+      <img src="4c_plot.png" alt="Jensen's Inequality - Geometric View" style="max-width:100%; height:auto; display:block;" />
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 4d — Concave Version</div>
+    <p>Now let \(f(x) = \log(x)\) (concave!). Using \(x_1 = 1, x_2 = 5\) with equal weights, show that Jensen's inequality <em>flips</em>: \(f\!\big(\mathbb{E}[X]\big) \geq \mathbb{E}[f(X)]\).</p>
+    <div class="answer-box filled">
+      <p>Now \(f(x) = \log(x)\), which is concave, so Jensen flips: \(f(\mathbb{E}[X]) \geq \mathbb{E}[f(X)]\).</p>
+      <p>Given \(x_1 = 1\), \(x_2 = 5\) with equal weights \(\frac{1}{2}\):</p>
+      <p><strong>Left side:</strong> \(f(\mathbb{E}[X]) = \log\big(\frac{1+5}{2}\big) = \log(3)\).</p>
+      <p><strong>Right side:</strong>
+      \[
+      \mathbb{E}[f(X)] = \frac{1}{2}\log(1) + \frac{1}{2}\log(5) = \frac{1}{2}\cdot 0 + \frac{1}{2}\log(5) = \frac{1}{2}\log(5).
+      \]</p>
+      <p><strong>Verify:</strong> \(\log(3) \approx 1.0986\) and \(\frac{1}{2}\log(5) \approx 0.8047\). So \(\log(3) \geq \frac{1}{2}\log(5)\), which confirms Jensen's inequality flips for concave \(f\).</p>
+    </div>
+  </div>
+
+  <div class="callout fun">
+    <div class="emoji">💡</div>
+    <div class="text"><strong>The pattern:</strong> Convex functions "amplify" spread, so averaging <em>after</em> applying \(f\) gives more than applying \(f\) <em>after</em> averaging. This is the core engine behind many proofs in information theory and variational inference.</div>
+  </div>
+</div>
+
+
+<!-- ── 1.6 KL Divergence ── -->
+<div class="section">
+  <h3>1.6 &nbsp; Distances Between Distributions — KL Divergence</h3>
+
+  <p>When comparing probability distributions, Euclidean distance often gives misleading results. The <em>right</em> measure depends on what you're optimizing.</p>
+
+  <div class="definition">
+    The <strong>Kullback-Leibler divergence</strong> from \(q\) to \(p\) is:
+    $$\text{KL}(p \| q) = \sum_x p(x) \log \frac{p(x)}{q(x)} = \mathbb{E}_{p}\!\left[\log \frac{p(x)}{q(x)}\right]$$
+  </div>
+
+  <div class="exercise compute">
+    <div class="ex-label">Exercise 5a — Compute Both</div>
+    <p>Let \(p = (0.99, 0.01)\) and \(q = (0.5, 0.5)\).</p>
+    <ol class="steps blue">
+      <li>Compute the Euclidean distance \(\|p - q\|_2\)</li>
+      <li>Compute \(\text{KL}(p \| q)\) using natural log</li>
+      <li>Which is larger? Why does the KL "see" something that Euclidean misses?</li>
+    </ol>
+    <div class="answer-box filled">
+      <p>Using the definition \(\text{KL}(p \| q) = \sum_x p(x)\log\frac{p(x)}{q(x)}\). Given \(p = (0.99, 0.01)\), \(q = (0.5, 0.5)\).</p>
+      <p><strong>1. Euclidean distance:</strong>
+      \[
+      \|p - q\|_2 = \sqrt{(0.99-0.5)^2 + (0.01-0.5)^2}
+      \]
+      \[
+      = \sqrt{0.49^2 + (-0.49)^2} = \sqrt{2(0.2401)} \approx 0.693
+      \]</p>
+      <p><strong>2. KL divergence (natural log):</strong>
+      \[
+      \text{KL}(p \| q) = 0.99 \log\frac{0.99}{0.5} + 0.01 \log\frac{0.01}{0.5}
+      \]
+      \[
+      = 0.99 \log(1.98) + 0.01 \log(0.02)
+      \]
+      With \(\log(1.98) \approx 0.683\) and \(\log(0.02) \approx -3.912\):
+      \[
+      0.99(0.683) + 0.01(-3.912) = 0.676 - 0.039 = 0.637
+      \]
+      So \(\text{KL}(p \| q) \approx 0.637\).</p>
+      <p><strong>3. Which is larger? What does KL "see"?</strong> The Euclidean distance ends up being slightly bigger numerically in this case.</p>
+      <p>What KL is actually capturing is different. It really cares about how much probability mass you're misplacing. If \(q(x)\) is small in a spot where \(p(x)\) puts a lot of weight, the log ratio term blows up and KL penalizes that hard. So it's not just measuring how far apart the vectors are in space like Euclidean distance does. It's measuring how badly one distribution is misrepresenting the other in terms of probability.</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 5b — Prove KL ≥ 0 (Using Your Jensen's Toolkit!)</div>
+    <p>This is where your warmup pays off! Follow these steps:</p>
+
+    <ol class="steps">
+      <li><strong>Setup:</strong> Write \(\text{KL}(p \| q) = -\sum_x p(x) \log \frac{q(x)}{p(x)} = -\mathbb{E}_p\!\big[\log \frac{q(X)}{p(X)}\big]\).</li>
+      <li><strong>Convexity check:</strong> Is \(f(t) = -\log(t)\) convex? (Check the second derivative.)</li>
+      <li><strong>Apply Jensen:</strong> Since \(-\log\) is convex, Jensen says \(-\mathbb{E}[\log(Y)] \geq -\log(\mathbb{E}[Y])\). Apply this with \(Y = \frac{q(X)}{p(X)}\).</li>
+      <li><strong>Compute \(\mathbb{E}_p\!\big[\frac{q(X)}{p(X)}\big]\):</strong> expand the expectation. What does it simplify to?</li>
+      <li><strong>Conclude:</strong> What is \(-\log(1)\)?</li>
+    </ol>
+    <div class="answer-box tall filled">
+      <p><strong>1. Setup</strong>
+      \[
+      \text{KL}(p \| q) = \sum_x p(x)\log\frac{p(x)}{q(x)} = -\sum_x p(x)\log\frac{q(x)}{p(x)} = -\mathbb{E}_p\!\left[\log\left(\frac{q(X)}{p(X)}\right)\right].
+      \]
+      Let \(Y = \frac{q(X)}{p(X)}\). Then \(\text{KL}(p \| q) = -\mathbb{E}_p[\log(Y)]\).</p>
+      <p><strong>2. Convexity check</strong> Define \(f(t)=-\log t\). Then
+      \[
+      f'(t)=-\frac{1}{t}, \quad f''(t)=\frac{1}{t^2} > 0 \;\text{ for }\; t>0.
+      \]
+      So \(f(t)=-\log t\) is convex.</p>
+      <p><strong>3. Apply Jensen</strong> Since \(f\) is convex, Jensen gives \(\mathbb{E}[f(Y)] \ge f(\mathbb{E}[Y])\). With \(f(t)=-\log t\):
+      \[
+      -\mathbb{E}[\log(Y)] \ge -\log(\mathbb{E}[Y]).
+      \]
+      So \(\text{KL}(p \| q) \ge -\log(\mathbb{E}_p[Y])\).</p>
+      <p><strong>4. Compute \(\mathbb{E}_p[Y]\)</strong>
+      \[
+      \mathbb{E}_p\!\left[\frac{q(X)}{p(X)}\right] = \sum_x p(x)\frac{q(x)}{p(x)} = \sum_x q(x) = 1.
+      \]</p>
+      <p><strong>5. Conclude</strong>
+      \[
+      \text{KL}(p \| q) \ge -\log(1) = 0.
+      \]</p>
+      <p>So \(\text{KL}(p \| q)\) is always nonnegative; the only "reason" is Jensen plus the fact that \(q\) sums to 1.</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 5c — KL is NOT a Metric!</div>
+    <p>Using the same \(p\) and \(q\) from 5a, compute \(\text{KL}(q \| p)\). Is it the same as \(\text{KL}(p \| q)\)? Which metric axiom does this violate?</p>
+    <div class="answer-box filled">
+      <p>Using \(p = (0.99, 0.01)\) and \(q = (0.5, 0.5)\) from 5a.</p>
+      <p>By definition:
+      \[
+      \text{KL}(q \| p) = \sum_x q(x)\log\frac{q(x)}{p(x)}.
+      \]</p>
+      <p><strong>Compute \(\text{KL}(q \| p)\):</strong>
+      \[
+      \text{KL}(q \| p) = 0.5\log\frac{0.5}{0.99} + 0.5\log\frac{0.5}{0.01} = 0.5\log(0.505) + 0.5\log(50)
+      \]
+      With \(\log(0.505) \approx -0.683\) and \(\log(50) \approx 3.912\):
+      \[
+      0.5(-0.683) + 0.5(3.912) = -0.342 + 1.956 = 1.614
+      \]
+      So \(\text{KL}(q \| p) \approx 1.61\).</p>
+      <p><strong>Compare with \(\text{KL}(p \| q)\):</strong> From 5a, \(\text{KL}(p \| q) \approx 0.637\). Clearly \(\text{KL}(q \| p) \neq \text{KL}(p \| q)\); in fact \(1.61 \gg 0.637\).</p>
+      <p><strong>Which metric axiom is violated?</strong> A metric must satisfy symmetry: \(d(p,q) = d(q,p)\). KL divergence does not satisfy symmetry, so it violates the symmetry axiom of a metric. That is why KL is not a true distance metric.</p>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="emoji">⚠️</div>
+    <div class="text"><strong>The asymmetry matters.</strong> In VAEs, we minimize \(\text{KL}(q_\phi(z|x) \| p(z))\). The direction is not arbitrary — it affects which mismatches get penalized more. We'll see this in Part III.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PART II — DIMENSIONALITY REDUCTION                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part-header">
+  <span class="part-num">Part II</span>
+  <h2>From PCA to Probabilistic PCA to Factor Analysis</h2>
+</div>
+
+<!-- pixel art: dimension funnel -->
+<div class="center" style="margin:24px 0;">
+  <svg width="300" height="70" viewBox="0 0 60 14" style="image-rendering:pixelated;">
+    <!-- high-dim dots -->
+    <circle cx="3" cy="2" r="0.8" fill="#c45d3e"/>
+    <circle cx="6" cy="4" r="0.8" fill="#3d6b8e"/>
+    <circle cx="2" cy="6" r="0.8" fill="#4a7c59"/>
+    <circle cx="7" cy="8" r="0.8" fill="#d4a843"/>
+    <circle cx="4" cy="10" r="0.8" fill="#6b4c7a"/>
+    <circle cx="8" cy="12" r="0.8" fill="#c45d3e"/>
+    <circle cx="1" cy="9" r="0.8" fill="#3d6b8e"/>
+    <circle cx="5" cy="1" r="0.8" fill="#4a7c59"/>
+    <!-- funnel -->
+    <polygon points="12,0 12,14 25,5 25,9" fill="none" stroke="#2c2416" stroke-width="0.5"/>
+    <text x="18" y="3" font-family="Outfit" font-size="2" fill="#6b5d4f" text-anchor="middle">compress</text>
+    <!-- low-dim dots -->
+    <circle cx="30" cy="5" r="0.8" fill="#c45d3e"/>
+    <circle cx="33" cy="7" r="0.8" fill="#3d6b8e"/>
+    <circle cx="31" cy="9" r="0.8" fill="#4a7c59"/>
+    <circle cx="34" cy="6" r="0.8" fill="#d4a843"/>
+    <circle cx="32" cy="8" r="0.8" fill="#6b4c7a"/>
+    <!-- arrow -->
+    <text x="38" y="8" font-family="Outfit" font-size="2.5" fill="#c45d3e" font-weight="600">→</text>
+    <!-- even lower -->
+    <line x1="42" y1="4" x2="56" y2="10" stroke="#6b5d4f" stroke-width="0.3"/>
+    <circle cx="44" cy="5" r="0.8" fill="#c45d3e"/>
+    <circle cx="47" cy="6.2" r="0.8" fill="#3d6b8e"/>
+    <circle cx="49" cy="7" r="0.8" fill="#4a7c59"/>
+    <circle cx="52" cy="8.2" r="0.8" fill="#d4a843"/>
+    <circle cx="54" cy="9" r="0.8" fill="#6b4c7a"/>
+    <!-- labels -->
+    <text x="4" y="14" font-family="Outfit" font-size="1.5" fill="#6b5d4f" text-anchor="middle">ℝᵈ</text>
+    <text x="32" y="12" font-family="Outfit" font-size="1.5" fill="#6b5d4f" text-anchor="middle">ℝᵏ</text>
+    <text x="49" y="12.5" font-family="Outfit" font-size="1.5" fill="#6b5d4f" text-anchor="middle">ℝ¹</text>
+  </svg>
+</div>
+
+<p>This part traces a single thread: we start with classical PCA, add a probabilistic model (PPCA), generalize to factor analysis, and then see how VAEs extend the idea with neural networks. It's one story with three chapters.</p>
+
+<!-- ── 2.1 Classical PCA ── -->
+<div class="section">
+  <h3>2.1 &nbsp; Classical PCA — The Geometry View</h3>
+
+  <p>Given centered data \(\mathbf{X} \in \mathbb{R}^{n \times d}\) (each row is a data point, columns have zero mean), PCA finds the direction of maximum variance:</p>
+
+  $$\max_{\|\mathbf{w}\|=1} \text{Var}(\mathbf{X}\mathbf{w}) = \max_{\|\mathbf{w}\|=1} \mathbf{w}^T \mathbf{S} \mathbf{w}$$
+
+  <p>where \(\mathbf{S} = \frac{1}{n}\mathbf{X}^T\mathbf{X}\) is the sample covariance matrix.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 6a — Derive the Variance Expression</div>
+    <p>Starting from \(\text{Var}(\mathbf{Xw}) = \frac{1}{n}\|\mathbf{Xw}\|^2\) (since data is centered), show this equals \(\mathbf{w}^T\mathbf{S}\mathbf{w}\).</p>
+    <div class="answer-box filled">
+      <p>Stated above: \(\text{Var}(\mathbf{Xw}) = \frac{1}{n}\|\mathbf{Xw}\|^2\).</p>
+      <p>Expand
+      \[
+      \|\mathbf{Xw}\|^2 = (\mathbf{Xw})^T(\mathbf{Xw}) = \mathbf{w}^T\mathbf{X}^T\mathbf{X}\mathbf{w}.
+      \]
+      So
+      \[
+      \text{Var}(\mathbf{Xw}) = \frac{1}{n}\mathbf{w}^T\mathbf{X}^T\mathbf{X}\mathbf{w}.
+      \]
+      Using the sample covariance matrix \(\mathbf{S} = \frac{1}{n}\mathbf{X}^T\mathbf{X}\), we get \(\text{Var}(\mathbf{Xw}) = \mathbf{w}^T\mathbf{S}\mathbf{w}\).</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 6b — Why Eigenvectors?</div>
+    <p>We want to maximize \(\mathbf{w}^T\mathbf{S}\mathbf{w}\) subject to \(\|\mathbf{w}\|=1\). Using a Lagrange multiplier \(\lambda\):</p>
+    <ol class="steps">
+      <li>Write the Lagrangian: \(\mathcal{L} = \mathbf{w}^T\mathbf{S}\mathbf{w} - \lambda(\mathbf{w}^T\mathbf{w} - 1)\)</li>
+      <li>Take the derivative with respect to \(\mathbf{w}\) and set it to zero</li>
+      <li>What equation do you get? Why does this mean \(\mathbf{w}\) is an eigenvector of \(\mathbf{S}\)?</li>
+      <li>Show that the maximum variance equals the largest eigenvalue</li>
+    </ol>
+    <div class="answer-box tall filled">
+      <p>We want to maximize \(\mathbf{w}^T\mathbf{S}\mathbf{w}\) subject to \(\|\mathbf{w}\| = 1\).</p>
+      <p><strong>1. Lagrangian:</strong>
+      \[
+      \mathcal{L} = \mathbf{w}^T\mathbf{S}\mathbf{w} - \lambda(\mathbf{w}^T\mathbf{w} - 1).
+      \]</p>
+      <p><strong>2. Derivative and set to zero:</strong>
+      \[
+      \nabla_{\mathbf{w}} \mathcal{L} = 2\mathbf{S}\mathbf{w} - 2\lambda\mathbf{w} = \mathbf{0}.
+      \]
+      Divide by 2 to get \(\mathbf{S}\mathbf{w} = \lambda\mathbf{w}\).</p>
+      <p><strong>3. What equation? Why eigenvector?</strong> We get
+      \[
+      \mathbf{S}\mathbf{w} = \lambda\mathbf{w},
+      \]
+      the eigenvalue equation. So \(\mathbf{w}\) must be an eigenvector of \(\mathbf{S}\) and \(\lambda\) is the corresponding eigenvalue.</p>
+      <p><strong>4. Why is maximum variance the largest eigenvalue?</strong> If \(\mathbf{w}\) is an eigenvector,
+      \[
+      \mathbf{w}^T\mathbf{S}\mathbf{w} = \mathbf{w}^T(\lambda\mathbf{w}) = \lambda\mathbf{w}^T\mathbf{w}.
+      \]
+      With \(\|\mathbf{w}\|=1\), \(\mathbf{w}^T\mathbf{w} = 1\), so \(\mathbf{w}^T\mathbf{S}\mathbf{w} = \lambda\). Therefore maximizing variance means choosing the eigenvector with the largest eigenvalue.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── 2.2 Probabilistic PCA ── -->
+<div class="section">
+  <h3>2.2 &nbsp; Probabilistic PCA — Adding a Generative Story</h3>
+
+  <p>Classical PCA doesn't have a probabilistic model — it's just geometry. <strong>Probabilistic PCA</strong> (Tipping &amp; Bishop, 1999) adds one:</p>
+
+  <div class="toolkit green" data-label="PPCA Model">
+    $$\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_k) \qquad \text{(latent variable, } k \text{-dim)}$$
+    $$\mathbf{x} = \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon} \qquad \text{(observed, } d \text{-dim)}$$
+    $$\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I}_d) \qquad \text{(isotropic noise)}$$
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 7a — Derive the Marginal Covariance</div>
+    <p>Compute \(\text{Cov}(\mathbf{x})\). Walk through it step by step:</p>
+    <ol class="steps green">
+      <li>\(\text{Cov}(\mathbf{x}) = \mathbb{E}[(\mathbf{x}-\boldsymbol{\mu})(\mathbf{x}-\boldsymbol{\mu})^T]\). Substitute the model.</li>
+      <li>What is \(\mathbb{E}[\mathbf{z}\mathbf{z}^T]\)?</li>
+      <li>What is \(\mathbb{E}[\boldsymbol{\epsilon}\boldsymbol{\epsilon}^T]\)?</li>
+      <li>Are \(\mathbf{z}\) and \(\boldsymbol{\epsilon}\) independent? What cross-terms vanish?</li>
+      <li>Write the final expression for \(\text{Cov}(\mathbf{x})\).</li>
+    </ol>
+    <div class="answer-box tall filled">
+      <p><strong>PPCA model</strong>: \(\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_k)\), \(\mathbf{x} = \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon}\), \(\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I}_d)\).</p>
+      <p><strong>1.</strong> From the covariance definition: \(\text{Cov}(\mathbf{x}) = \mathbb{E}[(\mathbf{x}-\boldsymbol{\mu})(\mathbf{x}-\boldsymbol{\mu})^T]\). Substitute \(\mathbf{x}-\boldsymbol{\mu} = \mathbf{W}\mathbf{z} + \boldsymbol{\epsilon}\):
+      \[
+      \text{Cov}(\mathbf{x}) = \mathbb{E}\big[(\mathbf{W}\mathbf{z}+\boldsymbol{\epsilon})(\mathbf{W}\mathbf{z}+\boldsymbol{\epsilon})^T\big].
+      \]
+      Expand into four terms: \(\mathbb{E}[\mathbf{W}\mathbf{z}\mathbf{z}^T\mathbf{W}^T] + \mathbb{E}[\mathbf{W}\mathbf{z}\boldsymbol{\epsilon}^T] + \mathbb{E}[\boldsymbol{\epsilon}\mathbf{z}^T\mathbf{W}^T] + \mathbb{E}[\boldsymbol{\epsilon}\boldsymbol{\epsilon}^T]\).</p>
+      <p><strong>2.</strong> Since \(\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_k)\), \(\mathbb{E}[\mathbf{z}\mathbf{z}^T] = \mathbf{I}_k\).</p>
+      <p><strong>3.</strong> Since \(\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I}_d)\), \(\mathbb{E}[\boldsymbol{\epsilon}\boldsymbol{\epsilon}^T] = \sigma^2\mathbf{I}_d\).</p>
+      <p><strong>4. Independence and cross-terms</strong>: \(\mathbf{z}\) and \(\boldsymbol{\epsilon}\) are independent, so \(\mathbb{E}[\mathbf{z}\boldsymbol{\epsilon}^T] = \mathbf{0}\). Hence \(\mathbb{E}[\mathbf{W}\mathbf{z}\boldsymbol{\epsilon}^T] = \mathbf{W}\mathbb{E}[\mathbf{z}\boldsymbol{\epsilon}^T] = \mathbf{0}\) and \(\mathbb{E}[\boldsymbol{\epsilon}\mathbf{z}^T\mathbf{W}^T] = \mathbf{0}\).</p>
+      <p><strong>5. Final expression:</strong>
+      \[
+      \text{Cov}(\mathbf{x}) = \mathbf{W}\mathbb{E}[\mathbf{z}\mathbf{z}^T]\mathbf{W}^T + \mathbb{E}[\boldsymbol{\epsilon}\boldsymbol{\epsilon}^T] = \mathbf{W}\mathbf{I}_k\mathbf{W}^T + \sigma^2\mathbf{I}_d = \mathbf{W}\mathbf{W}^T + \sigma^2\mathbf{I}_d.
+      \]
+      Matches the target in Exercise 7b.</p>
+    </div>
+  </div>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 7b — Connection to PCA</div>
+    <p>Your answer to 7a should be \(\text{Cov}(\mathbf{x}) = \mathbf{W}\mathbf{W}^T + \sigma^2\mathbf{I}\). In the limit \(\sigma^2 \to 0\), how does this relate to classical PCA? What are the eigenvectors of \(\mathbf{W}\mathbf{W}^T\)?</p>
+    <div class="answer-box filled">
+      <p>The worksheet gives \(\text{Cov}(\mathbf{x}) = \mathbf{W}\mathbf{W}^T + \sigma^2\mathbf{I}\). As \(\sigma^2 \to 0\),
+      \[
+      \text{Cov}(\mathbf{x}) \to \mathbf{W}\mathbf{W}^T,
+      \]
+      so the covariance has rank at most \(k\). All variance lies in the \(k\)-dimensional subspace spanned by the columns of \(\mathbf{W}\), the same principal-subspace idea as classical PCA.</p>
+      <p>The eigenvectors of \(\mathbf{W}\mathbf{W}^T\) are the directions of maximum variance. If \(\mathbf{W} = \mathbf{U}\boldsymbol{\Sigma}\mathbf{V}^T\) (SVD), then \(\mathbf{W}\mathbf{W}^T = \mathbf{U}\boldsymbol{\Sigma}^2\mathbf{U}^T\), so the eigenvectors are the columns of \(\mathbf{U}\) (left singular vectors of \(\mathbf{W}\)) and the eigenvalues are the squared singular values.</p>
+      <p>This is the “PPCA becomes PCA in the noise-free limit” statement: in PPCA the covariance is \(\mathbf{B}\mathbf{B}^T + \sigma^2\mathbf{I}\), and as \(\sigma \to 0\) it becomes \(\mathbf{B}\mathbf{B}^T\), matching the PCA covariance decomposition.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── 2.3 Factor Analysis ── -->
+<div class="section">
+  <h3>2.3 &nbsp; Factor Analysis — Relaxing the Noise</h3>
+
+  <p>PPCA assumes the same noise level \(\sigma^2\) in every dimension. <strong>Factor analysis</strong> relaxes this to dimension-specific noise:</p>
+
+  <div class="toolkit purple" data-label="Factor Analysis Model">
+    $$\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_k)$$
+    $$\mathbf{x} = \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon}$$
+    $$\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Psi}) \qquad \text{where } \boldsymbol{\Psi} = \text{diag}(\psi_1, \ldots, \psi_d)$$
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 8a — Factor Analysis Covariance</div>
+    <p>Using the same steps as Exercise 7a, show that \(\text{Cov}(\mathbf{x}) = \mathbf{W}\mathbf{W}^T + \boldsymbol{\Psi}\).</p>
+    <div class="answer-box filled">
+      <p><strong>Model:</strong> \(\mathbf{x} = \mathbf{W}\mathbf{z} + \boldsymbol{\mu} + \boldsymbol{\epsilon}\), \(\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}_k)\), \(\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Psi})\), \(\boldsymbol{\Psi} = \text{diag}(\psi_1, \ldots, \psi_d)\).</p>
+      <p><strong>1. Center:</strong> \(\mathbf{x} - \boldsymbol{\mu} = \mathbf{W}\mathbf{z} + \boldsymbol{\epsilon}\).</p>
+      <p><strong>2. Covariance:</strong> \(\text{Cov}(\mathbf{x}) = \mathbb{E}[(\mathbf{x}-\boldsymbol{\mu})(\mathbf{x}-\boldsymbol{\mu})^T] = \mathbb{E}[(\mathbf{W}\mathbf{z}+\boldsymbol{\epsilon})(\mathbf{W}\mathbf{z}+\boldsymbol{\epsilon})^T]\).</p>
+      <p><strong>3. Expand</strong> into four terms: \(\mathbf{W}\mathbb{E}[\mathbf{z}\mathbf{z}^T]\mathbf{W}^T + \mathbf{W}\mathbb{E}[\mathbf{z}\boldsymbol{\epsilon}^T] + \mathbb{E}[\boldsymbol{\epsilon}\mathbf{z}^T]\mathbf{W}^T + \mathbb{E}[\boldsymbol{\epsilon}\boldsymbol{\epsilon}^T]\).</p>
+      <p><strong>4.</strong> Use \(\mathbb{E}[\mathbf{z}\mathbf{z}^T] = \mathbf{I}_k\) and \(\mathbb{E}[\boldsymbol{\epsilon}\boldsymbol{\epsilon}^T] = \boldsymbol{\Psi}\). Independence gives \(\mathbb{E}[\mathbf{z}\boldsymbol{\epsilon}^T] = \mathbf{0}\), \(\mathbb{E}[\boldsymbol{\epsilon}\mathbf{z}^T] = \mathbf{0}\).</p>
+      <p><strong>5. Final:</strong>
+      \[
+      \text{Cov}(\mathbf{x}) = \mathbf{W}\mathbf{W}^T + \boldsymbol{\Psi}.
+      \]</p>
+    </div>
+  </div>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 8b — Compare the Three</div>
+    <p>Fill in this table:</p>
+    <table>
+      <tr>
+        <th>Model</th>
+        <th>Noise structure</th>
+        <th>Cov(x)</th>
+        <th>Decoder</th>
+      </tr>
+      <tr>
+        <td>PCA</td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">None (noise-free)</div></td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">\(\mathbf{W}\mathbf{W}^T\) (rank \(k\); \(\sigma^2 \to 0\) limit of PPCA)</div></td>
+        <td>Linear</td>
+      </tr>
+      <tr>
+        <td>PPCA</td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">\(\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I}_d)\) (isotropic)</div></td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">\(\mathbf{W}\mathbf{W}^T + \sigma^2\mathbf{I}_d\)</div></td>
+        <td>Linear</td>
+      </tr>
+      <tr>
+        <td>Factor Analysis</td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">\(\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \boldsymbol{\Psi})\), \(\boldsymbol{\Psi} = \text{diag}(\psi_1, \ldots, \psi_d)\) (diagonal)</div></td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">\(\mathbf{W}\mathbf{W}^T + \boldsymbol{\Psi}\)</div></td>
+        <td>Linear</td>
+      </tr>
+      <tr>
+        <td>VAE</td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">Prior \(\mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})\); reparameterization \(\mathbf{z} = \boldsymbol{\mu}(\mathbf{x}) + \boldsymbol{\sigma}(\mathbf{x}) \odot \boldsymbol{\epsilon}\), \(\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})\)</div></td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">No simple closed form; depends on nonlinear decoder \(p_\theta(\mathbf{x}|\mathbf{z})\)</div></td>
+        <td><div class="answer-box filled" style="min-height:30px;margin:0;">Nonlinear (neural net \(p_\theta(\mathbf{x}|\mathbf{z})\))</div></td>
+      </tr>
+    </table>
+    <p class="muted" style="margin-top:10px;font-size:0.9rem;">I referenced Lecture 11 slides to answer this.</p>
+  </div>
+
+  <div class="flow">
+    <div class="node">PCA</div>
+    <div class="arrow">→</div>
+    <div class="node" style="border-color:var(--green);">PPCA</div>
+    <div class="arrow">→</div>
+    <div class="node" style="border-color:var(--purple);">Factor Analysis</div>
+    <div class="arrow">→</div>
+    <div class="node" style="border-color:var(--accent);">VAE</div>
+  </div>
+  <p class="center small muted">Each model adds one more degree of freedom to the generative story.</p>
+</div>
+
+<!-- ── 2.4 t-SNE & UMAP ── -->
+<div class="section">
+  <h3>2.4 &nbsp; t-SNE &amp; UMAP (Conceptual)</h3>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 9a — Local vs Global</div>
+    <p>t-SNE converts high-dimensional distances into probabilities using a Gaussian kernel, then tries to match them in 2D using a <em>Student-t</em> kernel. Why does using a heavier-tailed distribution in the low-dimensional space help preserve local structure? Why might it distort global structure?</p>
+    <div class="answer-box"></div>
+  </div>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 9b — UMAP's Edge</div>
+    <p>UMAP constructs a topological graph and optimizes a cross-entropy loss. In 2–3 sentences, why might this preserve more global structure than t-SNE?</p>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PART III — VARIATIONAL AUTOENCODERS                         -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part-header">
+  <span class="part-num">Part III</span>
+  <h2>Variational Autoencoders — Theory</h2>
+</div>
+
+<!-- pixel art: encoder-decoder architecture -->
+<div class="center" style="margin:24px 0;">
+  <svg width="360" height="100" viewBox="0 0 72 20" style="image-rendering:pixelated;">
+    <!-- input image (grid) -->
+    <rect x="1" y="5" width="10" height="10" fill="#f5ede3" stroke="#2c2416" stroke-width="0.4"/>
+    <rect x="2" y="6" width="3" height="3" fill="#c45d3e" opacity="0.6"/>
+    <rect x="6" y="8" width="3" height="3" fill="#3d6b8e" opacity="0.6"/>
+    <rect x="3" y="10" width="4" height="3" fill="#4a7c59" opacity="0.6"/>
+    <text x="6" y="18" font-family="Outfit" font-size="2" fill="#6b5d4f" text-anchor="middle">x</text>
+
+    <!-- encoder arrow -->
+    <line x1="12" y1="10" x2="22" y2="10" stroke="#2c2416" stroke-width="0.5" marker-end="url(#arr)"/>
+    <text x="17" y="8" font-family="Outfit" font-size="1.6" fill="#6b5d4f" text-anchor="middle">encoder</text>
+    <text x="17" y="13" font-family="JetBrains Mono" font-size="1.3" fill="#c45d3e" text-anchor="middle">q(z|x)</text>
+
+    <!-- latent cloud -->
+    <ellipse cx="30" cy="10" rx="6" ry="5" fill="#f3e8ff" stroke="#6b4c7a" stroke-width="0.5"/>
+    <text x="30" y="10.8" font-family="Outfit" font-size="2.2" fill="#6b4c7a" font-weight="600" text-anchor="middle">z</text>
+    <text x="30" y="3.5" font-family="Outfit" font-size="1.6" fill="#6b4c7a" text-anchor="middle">μ, σ</text>
+
+    <!-- sample arrow -->
+    <text x="30" y="17" font-family="Outfit" font-size="1.4" fill="#6b5d4f" text-anchor="middle">sample: z = μ + σε</text>
+
+    <!-- decoder arrow -->
+    <line x1="37" y1="10" x2="47" y2="10" stroke="#2c2416" stroke-width="0.5" marker-end="url(#arr)"/>
+    <text x="42" y="8" font-family="Outfit" font-size="1.6" fill="#6b5d4f" text-anchor="middle">decoder</text>
+    <text x="42" y="13" font-family="JetBrains Mono" font-size="1.3" fill="#4a7c59" text-anchor="middle">p(x|z)</text>
+
+    <!-- output image -->
+    <rect x="49" y="5" width="10" height="10" fill="#f5ede3" stroke="#2c2416" stroke-width="0.4"/>
+    <rect x="50" y="6" width="3" height="3" fill="#c45d3e" opacity="0.4"/>
+    <rect x="54" y="8" width="3" height="3" fill="#3d6b8e" opacity="0.4"/>
+    <rect x="51" y="10" width="4" height="3" fill="#4a7c59" opacity="0.4"/>
+    <text x="54" y="18" font-family="Outfit" font-size="2" fill="#6b5d4f" text-anchor="middle">x̂</text>
+
+    <!-- loss labels -->
+    <text x="62" y="7" font-family="Outfit" font-size="1.5" fill="#c45d3e">reconstruction</text>
+    <text x="62" y="10" font-family="Outfit" font-size="1.5" fill="#6b4c7a">+ KL(q‖p)</text>
+    <text x="62" y="13" font-family="Outfit" font-size="1.5" fill="#2c2416" font-weight="600">= −ELBO</text>
+
+    <!-- arrowhead def -->
+    <defs>
+      <marker id="arr" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#2c2416"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<!-- ── 3.1 The ELBO ── -->
+<div class="section">
+  <h3>3.1 &nbsp; From Marginal Likelihood to the ELBO</h3>
+
+  <p>We want to maximize \(\log p(\mathbf{x})\), the log-probability of our data under the model. But this requires integrating over all possible latent codes \(\mathbf{z}\):</p>
+
+  $$\log p(\mathbf{x}) = \log \int p(\mathbf{x}, \mathbf{z})\, d\mathbf{z}$$
+
+  <p>This integral is intractable for neural-network decoders. The trick: introduce a variational distribution \(q(\mathbf{z}|\mathbf{x})\) that <em>approximates</em> the true posterior.</p>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 10 — Derive the ELBO (Guided Micro-Steps)</div>
+    <p>This is the key derivation in the course. Take it one line at a time.</p>
+
+    <ol class="steps purple">
+      <li><strong>Multiply and divide by \(q\):</strong>
+        $$\log p(\mathbf{x}) = \log \int q(\mathbf{z}|\mathbf{x}) \frac{p(\mathbf{x}, \mathbf{z})}{q(\mathbf{z}|\mathbf{x})}\, d\mathbf{z}$$
+        Why are we allowed to do this?
+      </li>
+
+      <li><strong>Rewrite as expectation:</strong>
+        $$= \log\; \mathbb{E}_{q(\mathbf{z}|\mathbf{x})}\!\left[\frac{p(\mathbf{x}, \mathbf{z})}{q(\mathbf{z}|\mathbf{x})}\right]$$
+      </li>
+
+      <li><strong>Apply Jensen's inequality:</strong> (Here's where your toolkit from Exercise 4 pays off!) Since \(\log\) is concave:
+        $$\geq \mathbb{E}_{q(\mathbf{z}|\mathbf{x})}\!\left[\log \frac{p(\mathbf{x}, \mathbf{z})}{q(\mathbf{z}|\mathbf{x})}\right]$$
+        This lower bound is the <strong>ELBO</strong>.
+      </li>
+
+      <li><strong>Expand the joint:</strong> Write \(p(\mathbf{x}, \mathbf{z}) = p(\mathbf{x}|\mathbf{z})\, p(\mathbf{z})\) and split the log:
+        <div class="answer-box filled">
+          <p>Using \(p(\mathbf{x}, \mathbf{z}) = p(\mathbf{x}|\mathbf{z})\, p(\mathbf{z})\), the log becomes \(\log p(\mathbf{x}|\mathbf{z}) + \log p(\mathbf{z}) - \log q(\mathbf{z}|\mathbf{x})\). So the ELBO equals
+          \[
+          \mathbb{E}_{q(\mathbf{z}|\mathbf{x})}\!\left[\log p(\mathbf{x}|\mathbf{z}) + \log p(\mathbf{z}) - \log q(\mathbf{z}|\mathbf{x})\right].
+          \]</p>
+        </div>
+      </li>
+
+      <li><strong>Rearrange into two terms:</strong> Show the ELBO equals:
+        $$\text{ELBO} = \underbrace{\mathbb{E}_{q(\mathbf{z}|\mathbf{x})}[\log p(\mathbf{x}|\mathbf{z})]}_{\text{reconstruction}} - \underbrace{\text{KL}\big(q(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})\big)}_{\text{regularization}}$$
+        <div class="answer-box filled">
+          <p>Group terms: \(\mathbb{E}_{q(\mathbf{z}|\mathbf{x})}[\log p(\mathbf{x}|\mathbf{z})] + \mathbb{E}_{q(\mathbf{z}|\mathbf{x})}[\log p(\mathbf{z}) - \log q(\mathbf{z}|\mathbf{x})]\). The second term is \(-\text{KL}(q(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))\). So
+          \[
+          \text{ELBO} = \mathbb{E}_{q(\mathbf{z}|\mathbf{x})}[\log p(\mathbf{x}|\mathbf{z})] - \text{KL}(q(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})),
+          \]
+          matching the worksheet's reconstruction–regularization decomposition.</p>
+          <p><strong>Interpretation:</strong> The first term (reconstruction) encourages accurate decoding; the second (regularization) pushes \(q(\mathbf{z}|\mathbf{x})\) toward the prior. Jensen's inequality turns the intractable marginal likelihood into this tractable lower bound.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="callout think">
+    <div class="emoji">🎯</div>
+    <div class="text"><strong>The two forces:</strong> The reconstruction term wants the encoder to produce codes that the decoder can faithfully reconstruct. The KL term wants the encoder to stay close to the prior \(p(\mathbf{z}) = \mathcal{N}(0, I)\). Training a VAE is a tug-of-war between these two forces.</div>
+  </div>
+</div>
+
+<!-- ── 3.2 Reparameterization Trick ── -->
+<div class="section">
+  <h3>3.2 &nbsp; The Reparameterization Trick</h3>
+
+  <p>To train the VAE with gradient descent, we need to backpropagate through the sampling step \(\mathbf{z} \sim q(\mathbf{z}|\mathbf{x})\). But sampling is stochastic — you can't differentiate through randomness!</p>
+
+  <div class="toolkit red" data-label="The Trick">
+    <p>Instead of sampling \(\mathbf{z} \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\sigma}^2)\) directly, reparameterize as:</p>
+    $$\boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}) \qquad \mathbf{z} = \boldsymbol{\mu} + \boldsymbol{\sigma} \odot \boldsymbol{\epsilon}$$
+    <p>Now \(\mathbf{z}\) is a <em>deterministic</em> function of \(\boldsymbol{\mu}\) and \(\boldsymbol{\sigma}\) (plus fixed noise \(\boldsymbol{\epsilon}\)), so gradients flow!</p>
+  </div>
+
+  <!-- pixel art: gradient flow diagram -->
+  <div class="center" style="margin:20px 0;">
+    <svg width="320" height="80" viewBox="0 0 64 16" style="image-rendering:pixelated;">
+      <!-- before -->
+      <rect x="1" y="1" width="28" height="14" rx="0" fill="#fdf3f0" stroke="#c45d3e" stroke-width="0.4"/>
+      <text x="15" y="3.5" font-family="Outfit" font-size="1.8" fill="#c45d3e" font-weight="600" text-anchor="middle">✗ Without trick</text>
+      <text x="5" y="7" font-family="JetBrains Mono" font-size="1.4" fill="#2c2416">μ, σ</text>
+      <text x="13" y="7" font-family="Outfit" font-size="1.6" fill="#c45d3e">→ sample →</text>
+      <text x="24" y="7" font-family="JetBrains Mono" font-size="1.4" fill="#2c2416">z</text>
+      <text x="15" y="10" font-family="Outfit" font-size="1.3" fill="#c45d3e" text-anchor="middle">∂z/∂μ = ??? 🚫</text>
+      <text x="15" y="13" font-family="Outfit" font-size="1.3" fill="#6b5d4f" text-anchor="middle">can't differentiate</text>
+
+      <!-- after -->
+      <rect x="33" y="1" width="28" height="14" rx="0" fill="#f0f7f1" stroke="#4a7c59" stroke-width="0.4"/>
+      <text x="47" y="3.5" font-family="Outfit" font-size="1.8" fill="#4a7c59" font-weight="600" text-anchor="middle">✓ With trick</text>
+      <text x="36" y="7" font-family="JetBrains Mono" font-size="1.4" fill="#2c2416">μ, σ, ε</text>
+      <text x="45" y="7" font-family="Outfit" font-size="1.6" fill="#4a7c59">→ z=μ+σε →</text>
+      <text x="57" y="7" font-family="JetBrains Mono" font-size="1.4" fill="#2c2416">z</text>
+      <text x="47" y="10" font-family="Outfit" font-size="1.3" fill="#4a7c59" text-anchor="middle">∂z/∂μ = 1  ✓</text>
+      <text x="47" y="13" font-family="Outfit" font-size="1.3" fill="#4a7c59" text-anchor="middle">∂z/∂σ = ε  ✓</text>
+    </svg>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 11a — Compute the Gradients</div>
+    <p>Given \(z = \mu + \sigma \cdot \epsilon\) where \(\epsilon \sim \mathcal{N}(0,1)\) is a fixed sample:</p>
+    <ol class="steps">
+      <li>Compute \(\frac{\partial z}{\partial \mu}\)</li>
+      <li>Compute \(\frac{\partial z}{\partial \sigma}\)</li>
+      <li>Why does treating \(\epsilon\) as a constant make this work?</li>
+    </ol>
+    <div class="answer-box filled">
+      <p>Given \(z = \mu + \sigma \cdot \epsilon\) with \(\epsilon \sim \mathcal{N}(0,1)\) treated as a fixed draw:</p>
+      <p><strong>1.</strong> \(\displaystyle \frac{\partial z}{\partial \mu} = 1\).</p>
+      <p><strong>2.</strong> \(\displaystyle \frac{\partial z}{\partial \sigma} = \epsilon\).</p>
+      <p><strong>3.</strong> Treating \(\epsilon\) as constant makes \(z\) a deterministic function of \((\mu, \sigma)\), so backprop can flow through \(\mu\) and \(\sigma\) instead of getting stuck at a random sampling operation.</p>
+    </div>
+  </div>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 11b — Reparameterizing a Laplace Distribution</div>
+    <p>The Laplace distribution has CDF \(F(x) = \frac{1}{2} + \frac{1}{2}\text{sgn}(x-\mu)\big(1 - e^{-|x-\mu|/b}\big)\).</p>
+    <ol class="steps">
+      <li>If \(U \sim \text{Uniform}(0,1)\), derive \(z = F^{-1}(U)\) (the inverse CDF method).</li>
+      <li>Express your answer as \(z = \mu + (\text{something involving } b \text{ and } U)\)</li>
+      <li>Can you now differentiate \(z\) with respect to \(\mu\) and \(b\)?</li>
+    </ol>
+    <div class="answer-box tall filled">
+      <p>Using the inverse CDF method: sample \(U \sim \text{Uniform}(0,1)\), then \(z = F^{-1}(U)\).</p>
+      <p><strong>Piecewise inverse:</strong>
+      \[
+      z = \begin{cases} \mu + b\ln(2U), & U < \tfrac{1}{2} \\[4pt] \mu - b\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{cases}
+      \]
+      So \(z = \mu + (\text{something involving } b \text{ and } U)\) as requested.</p>
+      <p><strong>Compact one-line form (equivalent):</strong>
+      \[
+      z = \mu - b\,\mathrm{sgn}\!\left(U-\tfrac12\right)\ln\!\left(1-2\left|U-\tfrac12\right|\right).
+      \]</p>
+      <p><strong>Can you differentiate wrt \(\mu\) and \(b\)?</strong> Yes. From the piecewise form: \(\frac{\partial z}{\partial \mu} = 1\), and
+      \[
+      \frac{\partial z}{\partial b} = \begin{cases} \ln(2U), & U < \tfrac{1}{2} \\[4pt] -\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{cases}
+      \]
+      This works for the same reason as the Gaussian case: once \(z\) is a deterministic function of \((\mu, b)\) and a fixed noise source \(U\), gradients are well-defined.</p>
+      <p class="muted" style="margin-top:10px;font-size:0.9rem;">The reparameterization trick \(z = \mu + \sigma\epsilon\) is from the VAE lecture (Lecture 11).</p>
+    </div>
+  </div>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 11c — Which Distributions Are Easy to Reparameterize?</div>
+    <p>Name two properties that make a distribution "reparameterization-friendly." Why are discrete distributions harder?</p>
+    <div class="answer-box filled">
+      <p><strong>Two properties:</strong> (1) The distribution is <strong>continuous and differentiable</strong>, so the sample can be a smooth function of the parameters and gradients can flow. (2) Sampling can be written as a <strong>deterministic transformation of parameter-free noise</strong>, e.g. \(z = g_\theta(\epsilon)\) with \(\epsilon \sim p(\epsilon)\) (like \(z = \mu + \sigma\epsilon\) for Gaussian).</p>
+      <p><strong>Why discrete is harder:</strong> Discrete distributions (Bernoulli, Categorical) use step or indicator functions and have zero gradient almost everywhere. The sample is not a smooth function of parameters, so backprop cannot flow through the sampling step. Alternatives include REINFORCE or Gumbel-Softmax.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── 3.3 Posterior Collapse ── -->
+<div class="section">
+  <h3>3.3 &nbsp; Posterior Collapse</h3>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 12 — The Tug-of-War Gone Wrong</div>
+    <p>Recall the ELBO has two terms: reconstruction and KL. Sometimes during training, the model learns to set \(q(\mathbf{z}|\mathbf{x}) \approx p(\mathbf{z}) = \mathcal{N}(0,I)\) for <em>all</em> inputs, effectively ignoring the latent code.</p>
+    <ol class="steps purple">
+      <li>If the decoder is powerful enough (e.g. an autoregressive model), why might it learn to ignore \(\mathbf{z}\)?</li>
+      <li>What happens to the KL term when \(q(\mathbf{z}|\mathbf{x}) = p(\mathbf{z})\)?</li>
+      <li>Why is this a "collapse"? What information about \(\mathbf{x}\) is lost?</li>
+      <li>Name one practical strategy to fight posterior collapse.</li>
+    </ol>
+    <div class="answer-box tall"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PART IV — PRACTICAL                                         -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part-header">
+  <span class="part-num">Part IV</span>
+  <h2>Practical — Museum Embeddings</h2>
+</div>
+
+<p>Time to get your hands dirty! In this section you'll work with museum artwork data — building embeddings, visualizing them, and seeing the theory from Parts I–III come alive.</p>
+
+<!-- ── 4.1 Data Setup ── -->
+<div class="section">
+  <h3>4.1 &nbsp; Your Data — The Metropolitan Museum of Art</h3>
+
+  <p>You'll be working with photographs and metadata from <strong>The Met's</strong> collection. Each object comes with a rich metadata record:</p>
+
+  <!-- Museum object card -->
+  <div style="background:white; border:1px solid rgba(0,0,0,0.12); padding:0; margin:20px 0; overflow:hidden;">
+    <div style="background:var(--ink); color:var(--bg); padding:10px 20px; font-family:'Outfit',sans-serif; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase;">
+      Sample Object Card
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0;">
+      <div style="padding:16px 20px; border-right:1px solid rgba(0,0,0,0.06);">
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Name</div>
+        <div style="font-size:1.05rem; font-weight:600; margin-bottom:12px;">Standing Figure</div>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Artist / Culture</div>
+        <div style="margin-bottom:12px;">Teotihuacan artist(s)</div>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Region</div>
+        <div style="margin-bottom:12px;">Central Mexico</div>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Date Range</div>
+        <div style="margin-bottom:12px;">350–600 CE</div>
+      </div>
+      <div style="padding:16px 20px;">
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Medium / Materials</div>
+        <div style="margin-bottom:12px;">Dense green schist</div>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Object Type</div>
+        <div style="margin-bottom:12px;">Standing figure sculpture</div>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Gallery</div>
+        <div style="margin-bottom:12px;">Gallery 360</div>
+
+        <div style="font-family:'Outfit',sans-serif; font-size:0.7rem; color:var(--ink-light); letter-spacing:1px; text-transform:uppercase;">Condition Notes</div>
+        <div style="font-size:0.9rem;">Legs intentionally broken in antiquity; finely polished surface; drill holes indicate attachments or inlays</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Your metadata CSV has these columns:</p>
+
+<pre data-lang="csv"><code>name, artist_culture, region, date_range_ce, medium_materials,
+object_type, condition_notes, current_location, met_gallery,
+description_notes</code></pre>
+
+  <p>Each row corresponds to a physical object that you (or a classmate) photographed at the museum. Your photos are your image data; the CSV rows are your metadata.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:20px 0;">
+    <div style="background:white; border:1px solid rgba(0,0,0,0.08); padding:16px; text-align:center;">
+      <!-- pixel art: camera taking photo of sculpture -->
+      <svg width="100" height="80" viewBox="0 0 20 16" style="image-rendering:pixelated;">
+        <!-- sculpture -->
+        <rect x="12" y="4" width="3" height="8" fill="#4a7c59"/>
+        <circle cx="13.5" cy="3" r="2" fill="#4a7c59"/>
+        <rect x="11" y="12" width="5" height="1" fill="#6b5d4f"/>
+        <!-- camera -->
+        <rect x="2" y="6" width="6" height="4" fill="#2c2416"/>
+        <rect x="3" y="5" width="2" height="1" fill="#2c2416"/>
+        <circle cx="5" cy="8" r="1.2" fill="#3d6b8e"/>
+        <circle cx="5" cy="8" r="0.5" fill="#6b5d4f"/>
+        <!-- flash lines -->
+        <line x1="8" y1="7" x2="11" y2="5" stroke="#d4a843" stroke-width="0.3" stroke-dasharray="0.5"/>
+        <line x1="8" y1="8" x2="11" y2="8" stroke="#d4a843" stroke-width="0.3" stroke-dasharray="0.5"/>
+        <line x1="8" y1="9" x2="11" y2="11" stroke="#d4a843" stroke-width="0.3" stroke-dasharray="0.5"/>
+      </svg>
+      <div style="font-family:'Outfit',sans-serif; font-size:0.8rem; color:var(--ink-light); margin-top:4px;">Your photos → image data</div>
+    </div>
+    <div style="background:white; border:1px solid rgba(0,0,0,0.08); padding:16px; text-align:center;">
+      <!-- pixel art: spreadsheet -->
+      <svg width="100" height="80" viewBox="0 0 20 16" style="image-rendering:pixelated;">
+        <rect x="3" y="2" width="14" height="12" fill="white" stroke="#2c2416" stroke-width="0.4"/>
+        <!-- header row -->
+        <rect x="3" y="2" width="14" height="2" fill="#d4a843"/>
+        <!-- grid lines -->
+        <line x1="8" y1="2" x2="8" y2="14" stroke="#e8dcc8" stroke-width="0.3"/>
+        <line x1="13" y1="2" x2="13" y2="14" stroke="#e8dcc8" stroke-width="0.3"/>
+        <line x1="3" y1="6" x2="17" y2="6" stroke="#e8dcc8" stroke-width="0.3"/>
+        <line x1="3" y1="8" x2="17" y2="8" stroke="#e8dcc8" stroke-width="0.3"/>
+        <line x1="3" y1="10" x2="17" y2="10" stroke="#e8dcc8" stroke-width="0.3"/>
+        <line x1="3" y1="12" x2="17" y2="12" stroke="#e8dcc8" stroke-width="0.3"/>
+        <!-- cell data squiggles -->
+        <rect x="4" y="4.5" width="3" height="0.5" fill="#6b5d4f" opacity="0.4"/>
+        <rect x="9" y="4.5" width="2" height="0.5" fill="#6b5d4f" opacity="0.4"/>
+        <rect x="14" y="4.5" width="2" height="0.5" fill="#6b5d4f" opacity="0.4"/>
+        <rect x="4" y="6.8" width="2.5" height="0.5" fill="#6b5d4f" opacity="0.4"/>
+        <rect x="9" y="6.8" width="3" height="0.5" fill="#6b5d4f" opacity="0.4"/>
+        <rect x="14" y="6.8" width="1.5" height="0.5" fill="#6b5d4f" opacity="0.4"/>
+      </svg>
+      <div style="font-family:'Outfit',sans-serif; font-size:0.8rem; color:var(--ink-light); margin-top:4px;">CSV → metadata</div>
+    </div>
+  </div>
+
+  <h4>Train / Validation / Test Splits</h4>
+  <p>You will split your dataset into three parts:</p>
+
+<pre data-lang="text"><code>data/
+├── train/       ← model learns from these
+│   ├── img_001.jpg
+│   ├── img_002.jpg
+│   └── ...
+├── val/         ← tune hyperparameters here
+│   └── ...
+└── test/        ← final evaluation only
+    └── ...</code></pre>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 13 — Data Hygiene</div>
+    <ol class="steps">
+      <li><strong>Test leakage:</strong> Suppose you accidentally include some test images in your training set. Why is this a problem? What would happen to your reported metrics vs. real-world performance?</li>
+      <li><strong>Why three splits?</strong> Why not just train and test? What role does the validation set play during model development? <em>Hint: think about what happens when you try 20 different hyperparameter settings and pick the one that does best on your test set.</em></li>
+    </ol>
+    <div class="answer-box tall"></div>
+  </div>
+
+  <div class="callout fun">
+    <div class="emoji">🏛️</div>
+    <div class="text"><strong>About this data:</strong> The metadata was collected by hand at The Met. Notice the richness — you have culture, region, time period, materials, condition, and free-text descriptions. Later, you'll see which of these attributes your learned embeddings actually capture (Exercise 19).</div>
+  </div>
+</div>
+
+<!-- ── 4.2 DataLoader ── -->
+<div class="section">
+  <h3>4.2 &nbsp; DataLoader Implementation</h3>
+
+<pre data-lang="python"><code>import torch
+import pandas as pd
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
+from PIL import Image
+import os
+
+class MuseumDataset(Dataset):
+    """Custom dataset: images + CSV metadata."""
+    def __init__(self, image_dir, csv_path, transform=None):
+        self.image_dir = image_dir
+        self.metadata = pd.read_csv(csv_path)
+        self.image_files = sorted(os.listdir(image_dir))
+        self.transform = transform
+
+    def __len__(self):
+        # YOUR CODE HERE — return the number of images
+        pass
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.image_dir, self.image_files[idx])
+        image = Image.open(img_path).convert('RGB')
+        # YOUR CODE HERE — apply self.transform if it exists
+        # Return image + row index (look up metadata later)
+        return image, idx
+
+# TODO: define transforms
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],  # ImageNet stats
+        std=[0.229, 0.224, 0.225]
+    ),
+])
+
+train_dataset = ### YOUR CODE HERE ###
+train_loader  = ### YOUR CODE HERE ###
+
+# Visualize a batch
+import matplotlib.pyplot as plt
+
+def show_batch(loader, n=8):
+    images, idxs = next(iter(loader))
+    fig, axes = plt.subplots(1, min(n, len(images)), figsize=(2*n, 2))
+    for i in range(min(n, len(images))):
+        img = images[i].permute(1, 2, 0)
+        # Undo normalization for display
+        img = img * torch.tensor([0.229, 0.224, 0.225]) + \
+                     torch.tensor([0.485, 0.456, 0.406])
+        img = img.clamp(0, 1)
+        axes[i].imshow(img)
+        axes[i].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+show_batch(train_loader)</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Checkpoint Question</div>
+    <p>What happens if you skip the <code>Normalize</code> transform? How would this affect a pretrained model like ResNet?</p>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+<!-- ── 4.3 Random CNN ── -->
+<div class="section">
+  <h3>4.3 &nbsp; Random CNN Architecture</h3>
+
+<pre data-lang="python"><code>import numpy as np
+import torch.nn as nn
+
+num_layers = np.random.randint(2, 6)
+channels = [3] + [np.random.choice([16, 32, 64]) for _ in range(num_layers)]
+
+layers = []
+for i in range(num_layers):
+    layers += [
+        nn.Conv2d(### YOUR CODE HERE ###),  # in_channels, out_channels, kernel_size, padding
+        nn.BatchNorm2d(### YOUR CODE HERE ###),
+        nn.ReLU(),
+        ### YOUR CODE HERE ###,  # spatial downsampling
+    ]
+layers.append(nn.AdaptiveAvgPool2d(1))  # global average pooling
+layers.append(nn.Flatten())
+
+random_cnn = nn.Sequential(*layers)
+
+# Test it
+x = torch.randn(1, 3, 224, 224)
+embedding = random_cnn(x)
+print(f"Layers: {num_layers}, Embedding dim: {embedding.shape[1]}")</code></pre>
+
+  <div class="exercise reflect">
+    <div class="ex-label">Exercise 14 — Why Random?</div>
+    <ol class="steps">
+      <li>Why might a randomly-initialized CNN still produce meaningful embeddings?</li>
+      <li>Does deeper always mean better clustering? What might go wrong?</li>
+    </ol>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+<!-- ── 4.4 Embedding Visualization ── -->
+<div class="section">
+  <h3>4.4 &nbsp; Embedding Extraction &amp; Visualization</h3>
+
+<pre data-lang="python"><code>from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+import umap  # pip install umap-learn
+
+# Extract embeddings (no gradients needed!)
+embeddings = []
+indices_list = []
+random_cnn.eval()
+with torch.no_grad():
+    for images, idxs in train_loader:
+        emb = ### YOUR CODE HERE ###  # pass images through the CNN
+        embeddings.append(emb)
+        indices_list.append(idxs)
+
+embeddings = torch.cat(embeddings).numpy()
+all_idxs = torch.cat(indices_list).numpy()
+
+# Use metadata for coloring — try different columns!
+# e.g. artist_culture, region, medium_materials
+metadata = train_dataset.metadata
+color_col = 'artist_culture'  # change me!
+label_strings = metadata[color_col].iloc[all_idxs].values
+unique_labels = list(set(label_strings))
+color_ids = np.array([unique_labels.index(l) for l in label_strings])
+
+# Run all three methods
+pca_2d = PCA(n_components=2).fit_transform(embeddings)
+tsne_2d = TSNE(n_components=2, perplexity=30).fit_transform(embeddings)
+umap_2d = umap.UMAP(n_components=2).fit_transform(embeddings)
+
+# Plot side by side
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+for ax, data, title in zip(axes,
+    [pca_2d, tsne_2d, umap_2d],
+    ['PCA', 't-SNE', 'UMAP']):
+    scatter = ax.scatter(data[:, 0], data[:, 1],
+                         c=color_ids, cmap='tab10', s=8, alpha=0.7)
+    ax.set_title(title)
+    ax.set_xticks([]); ax.set_yticks([])
+plt.colorbar(scatter, ax=axes[-1])
+plt.suptitle(f'Colored by: {color_col}')
+plt.tight_layout()
+plt.show()</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 15 — Compare the Three</div>
+    <p>Color your plots by <code>artist_culture</code>, then try <code>region</code> and <code>medium_materials</code>.</p>
+    <ol class="steps blue">
+      <li>Which method shows the tightest clusters?</li>
+      <li>Are the global relationships between clusters meaningful in each?</li>
+      <li>Which metadata attribute produces the clearest grouping — culture, region, or material?</li>
+    </ol>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+<!-- ── 4.5 Nearest Neighbors ── -->
+<div class="section">
+  <h3>4.5 &nbsp; Nearest Neighbor Retrieval</h3>
+
+<pre data-lang="python"><code>from sklearn.neighbors import NearestNeighbors
+
+nn_model = NearestNeighbors(n_neighbors=6, metric=### YOUR CODE HERE ###)
+nn_model.fit(embeddings)
+
+# Pick a query image
+query_idx = 42
+distances, indices = nn_model.kneighbors(### YOUR CODE HERE ###)
+
+# TODO: Visualize query + 5 nearest neighbors side by side
+# Are the neighbors visually similar?
+# Any surprising matches?</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 16</div>
+    <p>Complete the visualization code. For your query image, report: are the 5 nearest neighbors visually similar? Do they share the same culture, region, or material? Any surprising cross-culture matches?</p>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+<!-- ── 4.6 Outlier Detection ── -->
+<div class="section">
+  <h3>4.6 &nbsp; Outlier Detection</h3>
+
+  <div class="exercise code-ex">
+    <div class="ex-label">Exercise 17</div>
+    <p>Implement two outlier detection methods:</p>
+    <ol class="steps green">
+      <li><strong>Reconstruction error:</strong> Train a simple autoencoder, compute reconstruction error per image.</li>
+      <li><strong>Centroid distance:</strong> Compute each cluster's centroid, find images farthest from their cluster center.</li>
+    </ol>
+    <p>Visualize the top-5 outliers from each method. What do they represent — bad photos? Different styles? Mislabeled data?</p>
+    <div class="answer-box tall"></div>
+  </div>
+</div>
+
+<!-- ── 4.7 Background Removal ── -->
+<div class="section">
+  <h3>4.7 &nbsp; Segmentation &amp; Background Removal</h3>
+
+<pre data-lang="python"><code>import torchvision.models.segmentation as seg
+
+# Load pretrained DeepLabV3
+model = seg.deeplabv3_resnet101(pretrained=True).eval()
+
+def remove_background(image_tensor):
+    """Replace background with black canvas."""
+    with torch.no_grad():
+        output = model(image_tensor.unsqueeze(0))['out']
+        mask = ### YOUR CODE HERE ###  # argmax to get class predictions
+    # Apply mask to zero out background
+    masked = ### YOUR CODE HERE ###
+    return masked
+
+# TODO: Apply to all images, recompute embeddings
+# Compare clustering with vs without background</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 18</div>
+    <p>After removing backgrounds, recompute embeddings and run PCA/t-SNE/UMAP again. Does clustering improve? Why or why not?</p>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+<!-- ── 4.8 Cluster Quality ── -->
+<div class="section">
+  <h3>4.8 &nbsp; Cluster Interpretation &amp; Scoring</h3>
+
+<pre data-lang="python"><code>from sklearn.metrics import silhouette_score
+from sklearn.cluster import KMeans
+
+# Cluster the embeddings
+k = 5  # try different values!
+kmeans = ### YOUR CODE HERE ###
+pred_labels = ### YOUR CODE HERE ###
+
+# Silhouette score: how well-separated are clusters?
+sil_score = silhouette_score(### YOUR CODE HERE ###)
+print(f"Silhouette score: {sil_score:.3f}")
+
+# Purity score — do clusters align with metadata?
+from collections import Counter
+def purity_score(true_labels, pred_labels):
+    total = 0
+    for cluster_id in set(pred_labels):
+        mask = pred_labels == cluster_id
+        most_common = Counter(true_labels[mask]).most_common(1)[0][1]
+        total += most_common
+    return total / len(true_labels)
+
+# Try grouping by different metadata columns:
+# - artist_culture (Maya vs Teotihuacan vs ...)
+# - region (Central Mexico vs Guatemala vs ...)
+# - medium_materials (stone vs wood vs ceramic vs ...)
+# Which metadata attribute do your clusters best reflect?</code></pre>
+
+  <div class="exercise">
+    <div class="ex-label">Exercise 19</div>
+    <p>Compute the silhouette score and purity score against <em>at least two</em> different metadata attributes (e.g. <code>artist_culture</code> and <code>medium_materials</code>). Which attribute do your learned embeddings capture best? Is this what you expected?</p>
+    <div class="answer-box"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PART V — MULTIPLE CHOICE                                    -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part-header">
+  <span class="part-num">Part V</span>
+  <h2>Multiple Choice Checkpoint</h2>
+</div>
+
+<p>Test your understanding. Circle or highlight your answer. Each question has exactly one correct answer.</p>
+
+<!-- pixel art: quiz pencil -->
+<div class="center" style="margin:16px 0;">
+  <svg width="100" height="40" viewBox="0 0 20 8" style="image-rendering:pixelated;">
+    <rect x="3" y="2" width="14" height="4" fill="#d4a843" rx="0"/>
+    <rect x="15" y="2" width="3" height="4" fill="#e8a690"/>
+    <polygon points="0,4 3,2 3,6" fill="#2c2416"/>
+    <rect x="2" y="2" width="1" height="4" fill="#c0c0c0"/>
+  </svg>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 1</div>
+  <p>Which of the following is <strong>NOT</strong> a required property of a metric?</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> Non-negativity</li>
+    <li><span class="letter">B.</span> Symmetry</li>
+    <li class="mc-correct"><span class="letter">C.</span> Convexity</li>
+    <li><span class="letter">D.</span> Triangle inequality</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 2</div>
+  <p>KL divergence \(\text{KL}(p \| q)\) is <em>not</em> a metric because it violates:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> Non-negativity</li>
+    <li><span class="letter">B.</span> Triangle inequality only</li>
+    <li><span class="letter">C.</span> Symmetry only</li>
+    <li class="mc-correct"><span class="letter">D.</span> Both symmetry and triangle inequality</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 3</div>
+  <p>In Probabilistic PCA, \(\text{Cov}(\mathbf{x})\) equals:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> \(\mathbf{W}^T\mathbf{W}\)</li>
+    <li class="mc-correct"><span class="letter">B.</span> \(\mathbf{W}\mathbf{W}^T + \sigma^2\mathbf{I}\)</li>
+    <li><span class="letter">C.</span> \(\sigma^2\mathbf{W}\mathbf{W}^T\)</li>
+    <li><span class="letter">D.</span> \(\mathbf{W} + \sigma^2\mathbf{I}\)</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 4</div>
+  <p>Jensen's inequality states that for a <strong>convex</strong> function \(f\):</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> \(f(\mathbb{E}[X]) \geq \mathbb{E}[f(X)]\)</li>
+    <li class="mc-correct"><span class="letter">B.</span> \(f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]\)</li>
+    <li><span class="letter">C.</span> \(f(\mathbb{E}[X]) = \mathbb{E}[f(X)]\)</li>
+    <li><span class="letter">D.</span> \(\mathbb{E}[f(X)] \leq f(X)\)</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 5</div>
+  <p>In the ELBO, the reconstruction term is:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> \(\text{KL}(q(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))\)</li>
+    <li class="mc-correct"><span class="letter">B.</span> \(\mathbb{E}_{q(\mathbf{z}|\mathbf{x})}[\log p(\mathbf{x}|\mathbf{z})]\)</li>
+    <li><span class="letter">C.</span> \(\log p(\mathbf{x})\)</li>
+    <li><span class="letter">D.</span> \(\|\mathbf{x} - \hat{\mathbf{x}}\|^2\)</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 6</div>
+  <p>The reparameterization trick works by:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> Removing all stochasticity from the model</li>
+    <li class="mc-correct"><span class="letter">B.</span> Moving the randomness to a fixed noise variable \(\epsilon\) so gradients flow through \(\mu\) and \(\sigma\)</li>
+    <li><span class="letter">C.</span> Using reinforcement learning to estimate gradients</li>
+    <li><span class="letter">D.</span> Approximating the posterior with a Dirac delta</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 7</div>
+  <p>Posterior collapse in a VAE happens when:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> The reconstruction loss becomes zero</li>
+    <li class="mc-correct"><span class="letter">B.</span> The decoder ignores \(\mathbf{z}\) and the encoder produces \(q(\mathbf{z}|\mathbf{x}) \approx p(\mathbf{z})\) for all \(\mathbf{x}\)</li>
+    <li><span class="letter">C.</span> The latent dimension is too large</li>
+    <li><span class="letter">D.</span> The learning rate is too high</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 8</div>
+  <p>Why does hyperbolic space better embed hierarchical data than Euclidean space?</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> Hyperbolic space has more dimensions</li>
+    <li class="mc-correct"><span class="letter">B.</span> Circumference grows exponentially with radius, matching tree branching</li>
+    <li><span class="letter">C.</span> Euclidean distances are always larger</li>
+    <li><span class="letter">D.</span> Hyperbolic space is bounded, so trees fit naturally</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 9</div>
+  <p>Factor analysis differs from Probabilistic PCA in that:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> It uses a nonlinear decoder</li>
+    <li class="mc-correct"><span class="letter">B.</span> It has non-isotropic (diagonal) noise: \(\boldsymbol{\Psi} = \text{diag}(\psi_1, \ldots, \psi_d)\)</li>
+    <li><span class="letter">C.</span> It does not have a latent variable</li>
+    <li><span class="letter">D.</span> It maximizes the KL divergence</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 10</div>
+  <p>In PCA, the first principal component is the eigenvector of the covariance matrix with:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> The smallest eigenvalue</li>
+    <li class="mc-correct"><span class="letter">B.</span> The largest eigenvalue</li>
+    <li><span class="letter">C.</span> Eigenvalue equal to 1</li>
+    <li><span class="letter">D.</span> The median eigenvalue</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 11</div>
+  <p>\(d(x,y) = |x - y|^2\) fails to be a metric because it violates:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> Symmetry</li>
+    <li><span class="letter">B.</span> Non-negativity</li>
+    <li class="mc-correct"><span class="letter">C.</span> The triangle inequality</li>
+    <li><span class="letter">D.</span> Identity of indiscernibles</li>
+  </ul>
+</div>
+
+<div class="mc-question">
+  <div class="q-num">Question 12</div>
+  <p>When applying Jensen's inequality to derive the ELBO, we use the fact that \(\log\) is:</p>
+  <ul class="mc-options">
+    <li><span class="letter">A.</span> Convex</li>
+    <li class="mc-correct"><span class="letter">B.</span> Concave</li>
+    <li><span class="letter">C.</span> Linear</li>
+    <li><span class="letter">D.</span> Monotonically decreasing</li>
+  </ul>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- FOOTER -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div style="margin-top:64px; padding-top:24px; border-top:3px double var(--ink); text-align:center;">
+  <!-- pixel art: Columbia lion -->
+  <svg width="120" height="100" viewBox="0 0 24 20" style="image-rendering:pixelated; margin-bottom:8px;">
+    <!-- mane -->
+    <rect x="6" y="1" width="12" height="2" fill="#d4a843"/>
+    <rect x="5" y="3" width="14" height="2" fill="#d4a843"/>
+    <rect x="4" y="5" width="16" height="2" fill="#d4a843"/>
+    <rect x="4" y="7" width="3" height="2" fill="#d4a843"/>
+    <rect x="17" y="7" width="3" height="2" fill="#d4a843"/>
+    <!-- face -->
+    <rect x="7" y="5" width="10" height="6" fill="#e8a690"/>
+    <!-- ears -->
+    <rect x="6" y="3" width="2" height="2" fill="#e8a690"/>
+    <rect x="16" y="3" width="2" height="2" fill="#e8a690"/>
+    <rect x="7" y="3" width="1" height="1" fill="#c45d3e"/>
+    <rect x="16" y="3" width="1" height="1" fill="#c45d3e"/>
+    <!-- eyes -->
+    <rect x="9" y="6" width="2" height="2" fill="#2c2416"/>
+    <rect x="13" y="6" width="2" height="2" fill="#2c2416"/>
+    <rect x="9" y="6" width="1" height="1" fill="white"/>
+    <rect x="13" y="6" width="1" height="1" fill="white"/>
+    <!-- nose -->
+    <rect x="11" y="8" width="2" height="1" fill="#c45d3e"/>
+    <!-- mouth -->
+    <rect x="10" y="9" width="1" height="1" fill="#2c2416"/>
+    <rect x="13" y="9" width="1" height="1" fill="#2c2416"/>
+    <rect x="11" y="10" width="2" height="1" fill="#2c2416"/>
+    <!-- body -->
+    <rect x="7" y="11" width="10" height="4" fill="#d4a843"/>
+    <!-- legs -->
+    <rect x="7" y="15" width="3" height="3" fill="#d4a843"/>
+    <rect x="14" y="15" width="3" height="3" fill="#d4a843"/>
+    <!-- paws -->
+    <rect x="7" y="18" width="3" height="1" fill="#e8a690"/>
+    <rect x="14" y="18" width="3" height="1" fill="#e8a690"/>
+    <!-- tail -->
+    <rect x="17" y="11" width="2" height="1" fill="#d4a843"/>
+    <rect x="19" y="10" width="2" height="1" fill="#d4a843"/>
+    <rect x="21" y="9" width="1" height="2" fill="#d4a843"/>
+    <rect x="21" y="8" width="2" height="1" fill="#c45d3e"/>
+  </svg>
+  <div style="font-family:'Outfit',sans-serif; font-size:0.85rem; color:var(--ink-light);">
+    <em>"The geometry of the mind is the architecture of understanding."</em><br>
+    <span style="font-size:0.75rem;">— fake Keanu Reeves</span>
+  </div>
+  <div style="font-family:'Outfit',sans-serif; font-size:0.8rem; color:var(--ink-light); margin-top:16px; letter-spacing:1px;">
+    Applied Machine Learning — Spring 2026
+  </div>
+  <div style="font-family:'Outfit',sans-serif; font-size:0.8rem; color:var(--ink-light); margin-top:16px; letter-spacing:0.5px; max-width:600px; margin-left:auto; margin-right:auto; line-height:1.6;">
+    This worksheet has been generated with help from Claude, using a typed worksheet of exercises. You, however, are discouraged to use AI for this homework (unless to help with formatting your answers into this worksheet 🙂). Read: <a href="https://zenodo.org/records/18649848" style="color:var(--accent);">zenodo.org/records/18649848</a>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "\\(", right: "\\)", display: false},
+      {left: "\\[", right: "\\]", display: true}
+    ],
+    throwOnError: false
+  });
+});
+</script>
+
+</body>
+</html>
