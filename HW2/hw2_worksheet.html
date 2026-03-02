@@ -1780,7 +1780,7 @@ print("Conclusion: E[f(X)] is bigger than f(E[X])")
       <p>Using the inverse CDF method: sample \(U \sim \text{Uniform}(0,1)\), then \(z = F^{-1}(U)\).</p>
       <p><strong>Piecewise inverse:</strong>
       \[
-      z = \left\{\begin{array}{r@{\quad}l} \mu + b\ln(2U), & U < \tfrac{1}{2} \\[6pt] \mu - b\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{array}\right.
+      z = \begin{cases} \mu + b\ln(2U), & U < \tfrac{1}{2} \\[6pt] \mu - b\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{cases}
       \]
       So \(z = \mu + (\text{something involving } b \text{ and } U)\) as requested.</p>
       <p><strong>Compact one-line form (equivalent):</strong>
@@ -1789,7 +1789,7 @@ print("Conclusion: E[f(X)] is bigger than f(E[X])")
       \]</p>
       <p><strong>Can you differentiate wrt \(\mu\) and \(b\)?</strong> Yes. From the piecewise form: \(\frac{\partial z}{\partial \mu} = 1\), and
       \[
-      \frac{\partial z}{\partial b} = \left\{\begin{array}{r@{\quad}l} \ln(2U), & U < \tfrac{1}{2} \\[6pt] -\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{array}\right.
+      \frac{\partial z}{\partial b} = \begin{cases} \ln(2U), & U < \tfrac{1}{2} \\[6pt] -\ln\big(2(1-U)\big), & U \ge \tfrac{1}{2} \end{cases}
       \]
       This works for the same reason as the Gaussian case: once \(z\) is a deterministic function of \((\mu, b)\) and a fixed noise source \(U\), gradients are well-defined.</p>
       <p class="muted" style="margin-top:10px;font-size:0.9rem;">The reparameterization trick \(z = \mu + \sigma\epsilon\) is from the VAE lecture (Lecture 11).</p>
