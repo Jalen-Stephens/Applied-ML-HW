@@ -677,7 +677,7 @@ td {
   </div>
 
   <div class="name-line">
-    Name: <span></span> &nbsp;&nbsp; UNI: <span></span>
+    Name: <span>Jalen Stephens</span> &nbsp;&nbsp; UNI: <span>js5987</span>
   </div>
 </header>
 
@@ -770,51 +770,66 @@ td {
 <div class="section">
   <h3>1.2 &nbsp; Exercise 1 — Prove Euclidean Distance Is a Metric</h3>
 
-  <p>Let \(d(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_2 = \sqrt{\sum_i (x_i - y_i)^2}\). Show it's a proper metric.</p>
+  <p>Let \(d(\mathbf{x}, \mathbf{y}) = \left\|\mathbf{x} - \mathbf{y}\right\|_2 = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}\). Show it's a proper metric.</p>
 
   <div class="exercise">
     <div class="ex-label">Exercise 1a — Non-negativity</div>
-    <p>Why is \(\|\mathbf{x} - \mathbf{y}\|_2 \geq 0\)? <em>Hint: you're taking a square root of a sum of squares.</em></p>
+    <p>Why is \(\left\|\mathbf{x} - \mathbf{y}\right\|_2 \geq 0\)? <em>Hint: you're taking a square root of a sum of squares.</em></p>
     <div class="answer-box filled">
-      <p>We have
+      <p>We have</p>
+
       \[
-      d(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_2
-      = \sqrt{\sum_i (x_i - y_i)^2} \ge 0,
+      \displaystyle
+      d(\mathbf{x}, \mathbf{y})
+      = \lVert \mathbf{x} - \mathbf{y} \rVert_2
+      = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}
+      \ge 0,
       \]
-      because each term \((x_i - y_i)^2 \ge 0\) and the square root of a nonnegative
-      real number is also nonnegative (HW2 §1.1; MML-book, Def. 3.6).</p>
+
+      <p>
+        because each term \((x_i - y_i)^2 \ge 0\) and the square root of a nonnegative
+        real number is also nonnegative (HW2 §1.1; MML-book, Def. 3.6).
+      </p>
     </div>
   </div>
 
   <div class="exercise">
     <div class="ex-label">Exercise 1b — Identity of Indiscernibles</div>
-    <p>When exactly does \(\|\mathbf{x} - \mathbf{y}\|_2 = 0\)?</p>
+    <p>When exactly does \(\left\|\mathbf{x} - \mathbf{y}\right\|_2 = 0\)?</p>
     <div class="answer-box filled">
-      <p>
       \[
+      \displaystyle
       d(\mathbf{x}, \mathbf{y}) = 0
-      \iff \sqrt{\sum_i (x_i - y_i)^2} = 0
-      \iff \sum_i (x_i - y_i)^2 = 0.
+      \iff \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2} = 0
+      \iff \sum_{i=1}^{n} (x_i - y_i)^2 = 0.
       \]
-      A sum of nonnegative terms is zero only if every term is zero, so
-      \(x_i - y_i = 0\) for all \(i\), hence \(\mathbf{x} = \mathbf{y}\)
-      (HW2 §1.1; MML-book, Def. 3.6).</p>
+
+      <p>
+        A sum of nonnegative terms is zero only if every term is zero, so
+        \(x_i - y_i = 0\) for all \(i\), hence \(\mathbf{x} = \mathbf{y}\)
+        (HW2 §1.1; MML-book, Def. 3.6).
+      </p>
     </div>
   </div>
 
   <div class="exercise">
     <div class="ex-label">Exercise 1c — Symmetry</div>
-    <p>Show algebraically that \(\|\mathbf{x} - \mathbf{y}\|_2 = \|\mathbf{y} - \mathbf{x}\|_2\). <em>Hint: what happens when you square \((x_i - y_i)\) vs \((y_i - x_i)\)?</em></p>
+    <p>Show algebraically that \(\left\|\mathbf{x} - \mathbf{y}\right\|_2 = \left\|\mathbf{y} - \mathbf{x}\right\|_2\). <em>Hint: what happens when you square \((x_i - y_i)\) vs \((y_i - x_i)\)?</em></p>
     <div class="answer-box filled">
-      <p>
       \[
-      d(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_2
-      = \sqrt{\sum_i (x_i - y_i)^2}
-      = \sqrt{\sum_i (y_i - x_i)^2}
-      = \|\mathbf{y} - \mathbf{x}\|_2 = d(\mathbf{y}, \mathbf{x}),
+      \displaystyle
+      d(\mathbf{x}, \mathbf{y})
+      = \lVert \mathbf{x} - \mathbf{y} \rVert_2
+      = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}
+      = \sqrt{\sum_{i=1}^{n} (y_i - x_i)^2}
+      = \lVert \mathbf{y} - \mathbf{x} \rVert_2
+      = d(\mathbf{y}, \mathbf{x}),
       \]
-      since \((x_i - y_i)^2 = (y_i - x_i)^2\) for each coordinate
-      (HW2 §1.1; MML-book, Def. 3.6).</p>
+
+      <p>
+        since \((x_i - y_i)^2 = (y_i - x_i)^2\) for each coordinate
+        (HW2 §1.1; MML-book, Def. 3.6).
+      </p>
     </div>
   </div>
 
@@ -1591,13 +1606,17 @@ print("Conclusion: E[f(X)] is bigger than f(E[X])")
   <div class="exercise reflect">
     <div class="ex-label">Exercise 9a — Local vs Global</div>
     <p>t-SNE converts high-dimensional distances into probabilities using a Gaussian kernel, then tries to match them in 2D using a <em>Student-t</em> kernel. Why does using a heavier-tailed distribution in the low-dimensional space help preserve local structure? Why might it distort global structure?</p>
-    <div class="answer-box"></div>
+    <div class="answer-box filled">
+      <p>The heavier tailed Student t distribution helps fix the crowding problem by allowing distant points in 2D to stay farther apart instead of being compressed into the center. That makes it easier to strongly pull true neighbors together, so local neighborhoods are preserved well. But because t-SNE mainly matches local similarity probabilities using KL divergence, it does not strongly constrain large scale distances between clusters, so clusters can end up spaced arbitrarily in 2D even if their global geometry was different in high dimensions. This local preservation but global distortion tradeoff is discussed in the dimensionality reduction and latent structure sections of <em>MML Book Chapter 7.7</em>.</p>
+    </div>
   </div>
 
   <div class="exercise reflect">
     <div class="ex-label">Exercise 9b — UMAP's Edge</div>
     <p>UMAP constructs a topological graph and optimizes a cross-entropy loss. In 2–3 sentences, why might this preserve more global structure than t-SNE?</p>
-    <div class="answer-box"></div>
+    <div class="answer-box filled">
+      <p>UMAP builds a graph representation of the data manifold and optimizes a cross-entropy objective to preserve that connectivity structure. Because it models both local neighborhoods and broader graph relationships, it tends to retain more of the overall shape of the data so cluster positions in the embedding are more globally meaningful. This connects to the geometric and manifold learning perspective discussed in <em>MML Book Chapter 7.7</em> and reinforced conceptually in the Lecture 11 notes on latent geometry.</p>
+    </div>
   </div>
 </div>
 
@@ -2167,7 +2186,13 @@ plt.show()
       <li>Are the global relationships between clusters meaningful in each?</li>
       <li>Which metadata attribute produces the clearest grouping — culture, region, or material?</li>
     </ol>
-    <div class="answer-box"></div>
+    <p style="margin:12px 0;"><img src="exercise15_plot.png" alt="PCA, t-SNE, and UMAP colored by artist_culture, region, and medium_materials" style="max-width:100%; height:auto; display:block;" /></p>
+    <div class="answer-box filled tall">
+      <p><strong>1. Which method shows the tightest clusters?</strong> UMAP shows the tightest clusters. It forms more compact, separated islands compared to t-SNE, while PCA mostly collapses everything into one dense blob. t-SNE separates structure, but UMAP looks more clearly segmented.</p>
+      <p><strong>2. Are the global relationships between clusters meaningful in each?</strong> For PCA, yes: it preserves global variance, but the clusters aren't very separated. For t-SNE and UMAP, the local groupings are meaningful, but the distances between clusters shouldn't be overinterpreted since those methods mainly preserve local structure.</p>
+      <p><strong>3. Which metadata attribute produces the clearest grouping (culture, region, or material)?</strong> None of them show strong separation. The colors are still heavily mixed within clusters across all three rows. If anything, region looks slightly more structured than artist or materials, but overall the embeddings from the random CNN don't align strongly with any metadata attribute.</p>
+      <p><strong>Takeaway:</strong> Since the CNN is randomly initialized, it's not surprising that the embeddings don't strongly reflect semantic groupings like culture or material.</p>
+    </div>
   </div>
 </div>
 
@@ -2177,21 +2202,61 @@ plt.show()
 
 <pre data-lang="python"><code>from sklearn.neighbors import NearestNeighbors
 
-nn_model = NearestNeighbors(n_neighbors=6, metric=### YOUR CODE HERE ###)
+nn_model = NearestNeighbors(n_neighbors=6, metric="euclidean")
 nn_model.fit(embeddings)
 
-# Pick a query image
 query_idx = 42
-distances, indices = nn_model.kneighbors(### YOUR CODE HERE ###)
+distances, indices = nn_model.kneighbors(embeddings[query_idx].reshape(1, -1))
+indices = indices[0]  # (6,) — query + 5 neighbors
 
-# TODO: Visualize query + 5 nearest neighbors side by side
-# Are the neighbors visually similar?
-# Any surprising matches?</code></pre>
+# Visualize query + 5 nearest neighbors
+def denorm(t):
+    t = t.permute(1, 2, 0)
+    t = t * torch.tensor([0.229, 0.224, 0.225]) + torch.tensor([0.485, 0.456, 0.406])
+    return t.clamp(0, 1)
+
+meta_cols = ["artist_culture", "region", "medium_materials"]
+table_rows = []
+fig = plt.figure(figsize=(14, 5))
+ax_imgs = fig.subplots(1, 6)
+for i, idx in enumerate(indices):
+    img_tensor, meta_idx = train_dataset[idx]
+    row = train_dataset.metadata.iloc[meta_idx]
+    label = "Query" if i == 0 else f"NN {i}"
+    table_rows.append([label] + [str(row[c]) for c in meta_cols])
+    ax_imgs[i].imshow(denorm(img_tensor))
+    ax_imgs[i].set_title(label, fontsize=11)
+    ax_imgs[i].axis("off")
+fig.suptitle("Query image + 5 nearest neighbors (embedding space)", y=1.02)
+plt.tight_layout()
+plt.show()
+
+# Table below for easy comparison
+fig_table, ax_table = plt.subplots(figsize=(12, 1.8))
+ax_table.axis("off")
+table = ax_table.table(
+    cellText=table_rows,
+    colLabels=["Image"] + meta_cols,
+    loc="center",
+    cellLoc="left",
+    colColours=["#f0f0f0"] * 4,
+)
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1, 2.2)
+plt.title("Metadata comparison", fontsize=12, pad=10)
+plt.tight_layout()
+plt.show()</code></pre>
 
   <div class="exercise">
     <div class="ex-label">Exercise 16</div>
     <p>Complete the visualization code. For your query image, report: are the 5 nearest neighbors visually similar? Do they share the same culture, region, or material? Any surprising cross-culture matches?</p>
-    <div class="answer-box"></div>
+    <p style="margin:12px 0;"><img src="exercise16_plot.png" alt="Query image + 5 nearest neighbors in embedding space" style="max-width:100%; height:auto; display:block;" /></p>
+    <div class="answer-box filled tall">
+      <p><strong>Are the 5 nearest neighbors visually similar?</strong> NN1 is an exact matching sculpture. I think someone mislabeled the metadata because that isn't matching. The rest are not really that similar. They are all sculptures with similar lighting and display style, but in terms of shape and object type, most of them do not closely match the query piece.</p>
+      <p><strong>Do they share the same culture, region, or material?</strong> Not really. My query is Chiriqui from Costa Rica and volcanic stone, but most of the neighbors are from Mexico like Olmec or Teotihuacan, and the materials vary such as ceramic or stone with pigment. So there is no strong match in culture, region, or material across the neighbors.</p>
+      <p><strong>Any surprising cross-culture matches?</strong> Yes. The Costa Rica piece retrieving mostly Mexican pieces is definitely a cross culture match. It shows that the embedding space is grouping based on visual cues like texture, pose, and overall display context rather than cultural or historical meaning.</p>
+    </div>
   </div>
 </div>
 
@@ -2207,7 +2272,12 @@ distances, indices = nn_model.kneighbors(### YOUR CODE HERE ###)
       <li><strong>Centroid distance:</strong> Compute each cluster's centroid, find images farthest from their cluster center.</li>
     </ol>
     <p>Visualize the top-5 outliers from each method. What do they represent — bad photos? Different styles? Mislabeled data?</p>
-    <div class="answer-box tall"></div>
+    <p style="margin:12px 0;"><img src="exercise17_reconstruction_outliers.png" alt="Top-5 outliers by reconstruction error" style="max-width:100%; height:auto; display:block;" /></p>
+    <p style="margin:12px 0;"><img src="exercise17_centroid_outliers.png" alt="Top-5 outliers by distance to cluster centroid" style="max-width:100%; height:auto; display:block;" /></p>
+    <div class="answer-box filled tall">
+      <p><strong>Reconstruction error outliers.</strong> The top 5 outliers by reconstruction error mostly look like unusual poses, stronger color contrast, or different surface textures compared to the rest of the dataset. Some have brighter pigment or sharper lighting, and one is rotated, which probably makes reconstruction harder for the autoencoder. I do not think they are bad photos, but they do stand out visually. They feel more stylistically distinct or harder to compress into a simple latent representation. Looking at the metadata, there is no single culture or region dominating the outliers. It is a mix of Olmec, Tolita Tumaco, Mexican artists, and Manteño. That tells me the autoencoder is not flagging a specific culture, but rather images that visually deviate in structure, color, or pose.</p>
+      <p><strong>Centroid distance outliers.</strong> The centroid distance outliers look more structurally different from their cluster. One is clearly rotated, another has a very different silhouette, and one looks darker and more elongated than typical pieces. These feel less like reconstruction difficulty and more like they sit far from the average embedding of their cluster. Metadata wise, again it is mostly Mexico based cultures, but they vary in material and style. It does not look like mislabeling. Instead, they seem to be stylistic edge cases or pieces with uncommon shapes or orientations.</p>
+    </div>
   </div>
 </div>
 
@@ -2216,26 +2286,74 @@ distances, indices = nn_model.kneighbors(### YOUR CODE HERE ###)
   <h3>4.7 &nbsp; Segmentation &amp; Background Removal</h3>
 
 <pre data-lang="python"><code>import torchvision.models.segmentation as seg
+import torch.nn.functional as F
 
-# Load pretrained DeepLabV3
-model = seg.deeplabv3_resnet101(pretrained=True).eval()
+# Load pretrained DeepLabV3 (support both old and new torchvision API)
+try:
+    from torchvision.models.segmentation import DeepLabV3_ResNet101_Weights
+    seg_model = seg.deeplabv3_resnet101(weights=DeepLabV3_ResNet101_Weights.COCO_WITH_VOC_LABELS_V1).eval()
+except (ImportError, AttributeError):
+    seg_model = seg.deeplabv3_resnet101(pretrained=True).eval()
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+seg_model = seg_model.to(device)
 
 def remove_background(image_tensor):
     """Replace background with black canvas."""
+    image_tensor = image_tensor.to(device)
     with torch.no_grad():
-        output = model(image_tensor.unsqueeze(0))['out']
-        mask = ### YOUR CODE HERE ###  # argmax to get class predictions
-    # Apply mask to zero out background
-    masked = ### YOUR CODE HERE ###
-    return masked
+        output = seg_model(image_tensor.unsqueeze(0))["out"]
+        mask = (output.argmax(1) != 0).float()
+        mask = F.interpolate(mask.unsqueeze(1), size=image_tensor.shape[-2:], mode="nearest").squeeze(1)
+        masked = image_tensor * mask
+    return masked.cpu()
 
-# TODO: Apply to all images, recompute embeddings
-# Compare clustering with vs without background</code></pre>
+# Apply to all images and recompute embeddings
+embeddings_bg_list = []
+random_cnn.eval()
+with torch.no_grad():
+    for i in range(len(train_dataset)):
+        img_tensor, _ = train_dataset[i]
+        img_no_bg = remove_background(img_tensor).unsqueeze(0).to(device)
+        emb = random_cnn(img_no_bg)
+        embeddings_bg_list.append(emb.cpu())
+embeddings_bg = torch.cat(embeddings_bg_list, dim=0).numpy()
+
+# Dimensionality reduction on background-removed embeddings
+pca_bg  = PCA(n_components=2).fit_transform(embeddings_bg)
+tsne_bg = TSNE(n_components=2, perplexity=30, init="random", learning_rate="auto").fit_transform(embeddings_bg)
+umap_bg = umap.UMAP(n_components=2).fit_transform(embeddings_bg)
+
+reduced_bg = [pca_bg, tsne_bg, umap_bg]
+titles = ["PCA", "t-SNE", "UMAP"]
+
+fig, axes = plt.subplots(3, 3, figsize=(18, 15))
+for row_idx, color_col in enumerate(color_columns):
+    label_strings = metadata[color_col].iloc[all_idxs].astype(str).values
+    unique_labels = list(dict.fromkeys(label_strings))
+    color_ids = np.array([unique_labels.index(l) for l in label_strings])
+    for col_idx, (data, title) in enumerate(zip(reduced_bg, titles)):
+        ax = axes[row_idx, col_idx]
+        scatter = ax.scatter(data[:, 0], data[:, 1], c=color_ids, cmap="tab20", s=8, alpha=0.7)
+        if row_idx == 0:
+            ax.set_title(title, fontsize=12)
+        if col_idx == 0:
+            ax.set_ylabel(color_col, fontsize=12)
+        ax.set_xticks([])
+        ax.set_yticks([])
+fig.suptitle("After background removal", fontsize=14, y=1.02)
+plt.tight_layout()
+plt.show()</code></pre>
 
   <div class="exercise">
     <div class="ex-label">Exercise 18</div>
     <p>After removing backgrounds, recompute embeddings and run PCA/t-SNE/UMAP again. Does clustering improve? Why or why not?</p>
-    <div class="answer-box"></div>
+    <p style="margin:12px 0;"><img src="exercise18_plot.png" alt="PCA, t-SNE, and UMAP after background removal" style="max-width:100%; height:auto; display:block;" /></p>
+    <div class="answer-box filled tall">
+      <p>After removing the backgrounds and recomputing embeddings, clustering does not meaningfully improve. If anything, the structure looks even more distorted in PCA, and while t-SNE and UMAP still form shapes or arcs, the colors remain heavily mixed across culture, region, and material.</p>
+      <p>I think what this shows is that the background was not the main driver of structure in the embedding space. Even after removing it, the clusters are not aligning with metadata labels. That makes sense because the CNN is still random and not trained to extract semantic features. It is grouping based on low level shape and texture patterns, not cultural or regional meaning.</p>
+      <p>So overall, background removal did not solve the clustering issue. The limitation is more about the representation itself than the background.</p>
+    </div>
   </div>
 </div>
 
@@ -2245,36 +2363,49 @@ def remove_background(image_tensor):
 
 <pre data-lang="python"><code>from sklearn.metrics import silhouette_score
 from sklearn.cluster import KMeans
+from collections import Counter
 
-# Cluster the embeddings
+# Cluster the embeddings (you can change k)
 k = 5  # try different values!
-kmeans = ### YOUR CODE HERE ###
-pred_labels = ### YOUR CODE HERE ###
+kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+pred_labels = kmeans.fit_predict(embeddings)
 
 # Silhouette score: how well-separated are clusters?
-sil_score = silhouette_score(### YOUR CODE HERE ###)
-print(f"Silhouette score: {sil_score:.3f}")
+sil_score = silhouette_score(embeddings, pred_labels)
+print(f"Silhouette score (k={k}): {sil_score:.3f}")
 
 # Purity score — do clusters align with metadata?
-from collections import Counter
 def purity_score(true_labels, pred_labels):
     total = 0
+    true_labels = np.array(true_labels)
+    pred_labels = np.array(pred_labels)
     for cluster_id in set(pred_labels):
         mask = pred_labels == cluster_id
         most_common = Counter(true_labels[mask]).most_common(1)[0][1]
         total += most_common
     return total / len(true_labels)
 
-# Try grouping by different metadata columns:
+# Try grouping by different metadata columns
 # - artist_culture (Maya vs Teotihuacan vs ...)
 # - region (Central Mexico vs Guatemala vs ...)
 # - medium_materials (stone vs wood vs ceramic vs ...)
-# Which metadata attribute do your clusters best reflect?</code></pre>
+cluster_meta_cols = ["artist_culture", "region", "medium_materials"]
+true_indices = all_idxs  # metadata rows corresponding to embeddings
+
+print("Purity scores by metadata attribute:")
+for col in cluster_meta_cols:
+    col_labels = metadata[col].iloc[true_indices].astype(str).values
+    p = purity_score(col_labels, pred_labels)
+    print(f"  {col:16s}: {p:.3f}")</code></pre>
 
   <div class="exercise">
     <div class="ex-label">Exercise 19</div>
     <p>Compute the silhouette score and purity score against <em>at least two</em> different metadata attributes (e.g. <code>artist_culture</code> and <code>medium_materials</code>). Which attribute do your learned embeddings capture best? Is this what you expected?</p>
-    <div class="answer-box"></div>
+    <div class="answer-box filled tall">
+      <p>The silhouette score is 0.272, which tells me the clusters are only moderately separated. It is not terrible, but it is definitely not strong structure either. The clusters exist, but they overlap quite a bit.</p>
+      <p>Looking at purity, artist_culture is 0.233, region is 0.282, and medium_materials is 0.415. So the embeddings align best with medium_materials. That makes sense to me. The CNN is random and mainly picking up on visual cues like texture and surface patterns. Material differences like stone versus ceramic are more visually distinct than cultural labels, so it makes sense that material has the highest purity.</p>
+      <p>I did not expect strong alignment with artist_culture, since culture is a higher level semantic concept that a random embedding would not capture well. So overall, the embeddings are capturing low level visual structure more than historical or geographic meaning, which is exactly what I would expect given the setup.</p>
+    </div>
   </div>
 </div>
 

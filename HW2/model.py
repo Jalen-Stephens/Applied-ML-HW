@@ -4,30 +4,35 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
+from PIL.Image import UnidentifiedImageError
 import os
 
 class MuseumDataset(Dataset):
-    """Custom dataset: images + CSV metadata."""
+    """Custom dataset: images + CSV metadata. Skips unreadable/corrupt images at init."""
     def __init__(self, image_dir, csv_path, transform=None):
         self.image_dir = image_dir
         self.metadata = pd.read_csv(csv_path)
-        self.image_files = sorted(os.listdir(image_dir))
+        all_files = sorted(os.listdir(image_dir))
+        self.valid_indices = []
+        for i, fname in enumerate(all_files):
+            path = os.path.join(image_dir, fname)
+            try:
+                Image.open(path).convert('RGB')
+                self.valid_indices.append(i)
+            except (OSError, UnidentifiedImageError):
+                pass
+        self.image_files = [all_files[i] for i in self.valid_indices]
         self.transform = transform
 
     def __len__(self):
-        # return the number of images
         return len(self.image_files)
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.image_dir, self.image_files[idx])
         image = Image.open(img_path).convert('RGB')
-
-        # apply self.transform if it exists
         if self.transform is not None:
             image = self.transform(image)
-
-        # Return image + row index (look up metadata later)
-        return image, idx
+        return image, self.valid_indices[idx]
 
 # TODO: define transforms
 transform = transforms.Compose([
@@ -40,8 +45,8 @@ transform = transforms.Compose([
 ])
 
 # ---- fill these in with your actual paths ----
-train_image_dir = "HW2/data_oceania_HW2/train"        # e.g., "data/train"
-train_csv_path  = "HW2/data_oceania_HW2/metadata.csv" # e.g., "data/metadata.csv"
+train_image_dir = "data_oceania_HW2/train"        # run from HW2/ so paths are relative to HW2
+train_csv_path  = "data_oceania_HW2/metadata.csv"
 
 train_dataset = MuseumDataset(train_image_dir, train_csv_path, transform=transform)
 
@@ -49,7 +54,7 @@ train_loader = DataLoader(
     train_dataset,
     batch_size=32,
     shuffle=True,
-    num_workers=2,
+    num_workers=0,
     pin_memory=True
 )
 
