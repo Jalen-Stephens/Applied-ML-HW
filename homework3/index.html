@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Applied ML - Homework 3</title>
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]}};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+:root{--bg:#fafafa;--fg:#161616;--card:#fff;--border:#ddd;--accent:#0d47a1;--code-bg:#f3f3f3;}
+*{box-sizing:border-box;}
+body{font-family:Georgia,"Times New Roman",serif;line-height:1.72;margin:0;background:var(--bg);color:var(--fg);}
+.wrap{max-width:960px;margin:0 auto;padding:36px 28px 80px;background:var(--card);}
+h1{margin-top:0;font-size:1.9em;}
+h2{border-bottom:2px solid var(--border);padding-bottom:6px;margin-top:48px;}
+h3{margin-top:32px;}
+h4{margin-top:20px;}
+a{color:var(--accent);text-decoration:none;}
+a:hover{text-decoration:underline;}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:0.92em;}
+pre{background:var(--code-bg);padding:14px;border-radius:8px;overflow-x:auto;line-height:1.45;}
+table{border-collapse:collapse;margin:12px 0;}
+th,td{border:1px solid var(--border);padding:6px 10px;text-align:left;}
+th{background:#f5f5f5;}
+.muted{color:#555;font-size:0.95em;}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<h1>Applied Machine Learning Homework 3</h1>
+
+<!-- ============================================================ -->
+<!-- PART A -->
+<!-- ============================================================ -->
+
+<h2 id="part-a">Part A: Graph Neural Networks by Hand</h2>
+<p class="muted">References: Homework 3 Part A handout; Lecture 15 on aggregation and update operators; Lecture 16 on GNNs for scientific simulation; Jegelka survey.</p>
+
+<!-- P1 -->
+<h3 id="p1">Problem 1. Reading a graph as a matrix</h3>
+<p>Path graph: \(1 - 2 - 3 - 4\), features \(x = (1,0,2,1)^\top\).</p>
+
+<h4>(a) Adjacency matrix</h4>
+\[A = \begin{bmatrix}0&1&0&0\\1&0&1&0\\0&1&0&1\\0&0&1&0\end{bmatrix}.\]
+
+<h4>(b) Compute \(Ax\)</h4>
+\[(Ax)_1 = 0(1)+1(0)+0(2)+0(1)=0,\]
+\[(Ax)_2 = 1(1)+0(0)+1(2)+0(1)=3,\]
+\[(Ax)_3 = 0(1)+1(0)+0(2)+1(1)=1,\]
+\[(Ax)_4 = 0(1)+0(0)+1(2)+0(1)=2.\]
+\[Ax = \begin{bmatrix}0\\3\\1\\2\end{bmatrix}.\]
+
+<h4>(c) Interpretation</h4>
+<p>\((Ax)_i\) is the sum of features of neighbors of node \(i\) that lie one hop away. This is the basic neighborhood aggregation that Lecture 15 describes as the core GNN operation.</p>
+
+<h4>(d) \(A^2 x\)</h4>
+<p>Compute \(A(Ax)\) with \(Ax=(0,3,1,2)^\top\):</p>
+\[(A^2x)_1=0(0)+1(3)+0(1)+0(2)=3,\]
+\[(A^2x)_2=1(0)+0(3)+1(1)+0(2)=1,\]
+\[(A^2x)_3=0(0)+1(3)+0(1)+1(2)=5,\]
+\[(A^2x)_4=0(0)+0(3)+1(1)+0(2)=1.\]
+\[A^2x = \begin{bmatrix}3\\1\\5\\1\end{bmatrix}.\]
+<p>\(A^2\) counts length-2 walks, so \((A^2x)_i\) aggregates features from nodes reachable in exactly two steps. Stacking GNN layers deepens the receptive field in the same way.</p>
+
+<!-- P2 -->
+<h3 id="p2">Problem 2. One round of message passing</h3>
+<p>Same graph, \(h^{(0)}=(1,0,2,1)^\top\). Update: \(m_v^{(1)}=\sum_{u\in\mathcal N(v)}h_u^{(0)}\), \(h_v^{(1)}=h_v^{(0)}+m_v^{(1)}\).</p>
+
+<h4>(a) Messages</h4>
+\[m_1^{(1)}=h_2^{(0)}=0,\quad m_2^{(1)}=h_1^{(0)}+h_3^{(0)}=1+2=3,\]
+\[m_3^{(1)}=h_2^{(0)}+h_4^{(0)}=0+1=1,\quad m_4^{(1)}=h_3^{(0)}=2.\]
+
+<h4>(b) Updated representations</h4>
+\[h_1^{(1)}=1+0=1,\ h_2^{(1)}=0+3=3,\ h_3^{(1)}=2+1=3,\ h_4^{(1)}=1+2=3.\]
+
+<h4>(c) Result</h4>
+\[h^{(1)}=(1,3,3,3)^\top.\]
+
+<h4>(d) Why 1-hop only</h4>
+<p>Each \(m_v^{(1)}\) sums only the features of direct neighbors \(\mathcal N(v)\). No neighbor-of-neighbor information enters the sum, so the representation after one round encodes only the neighborhood within one hop.</p>
+
+<!-- P3 -->
+<h3 id="p3">Problem 3. Two rounds of message passing</h3>
+<p>Continue with \(h^{(1)}=(1,3,3,3)^\top\).</p>
+
+<h4>(a) Compute</h4>
+\[m_1^{(2)}=3,\quad m_2^{(2)}=1+3=4,\quad m_3^{(2)}=3+3=6,\quad m_4^{(2)}=3.\]
+\[h^{(2)}=(1+3,\;3+4,\;3+6,\;3+3)^\top=(4,7,9,6)^\top.\]
+
+<h4>(b) Influence on node 2</h4>
+<p>All four nodes eventually influence the representation at node 2. For instance, node 4 reaches node 2 along the path \(4\to3\to2\) in two hops.</p>
+
+<h4>(c) Why \(t\)-hop locality</h4>
+<p>The claim follows by induction. After round 1 each node knows its neighbors one hop away. In round 2 each node aggregates those round-1 representations, which extends the horizon by one hop. After \(t\) rounds, the receptive field covers exactly the neighborhood within \(t\) hops.</p>
+
+<!-- P4 -->
+<h3 id="p4">Problem 4. ReLU version</h3>
+<p>Graph \(1-2-3\), \(h^{(0)}=(-1,2,-2)^\top\), update: \(h_v^{(1)}=\operatorname{ReLU}(h_v^{(0)}+m_v^{(1)})\).</p>
+
+<h4>(a) Messages</h4>
+\[m_1^{(1)}=2,\quad m_2^{(1)}=-1+(-2)=-3,\quad m_3^{(1)}=2.\]
+
+<h4>(b) Update</h4>
+<p>Pre-activations: \((1,\;-1,\;0)\). After ReLU:</p>
+\[h^{(1)}=(1,0,0)^\top.\]
+
+<h4>(c) Effect of nonlinearity</h4>
+<p>ReLU clips negative aggregated values to zero, introducing nonlinearity and sparsity. Without it, stacking layers is just repeated linear aggregation, which is equivalent to multiplying by powers of \(A\). The nonlinearity is what makes deep GNNs more expressive than a single matrix power.</p>
+
+<!-- P5 -->
+<h3 id="p5">Problem 5. 1-WL on a path graph</h3>
+<p>Path \(1-2-3-4\), all nodes start with color \(a\).</p>
+
+<h4>(a) \(t=0\)</h4>
+<p>All nodes: color \(a\).</p>
+
+<h4>(b) Round 1</h4>
+<table>
+<tr><th>Node</th><th>Signature</th><th>New color</th></tr>
+<tr><td>1</td><td>\((a,\{a\})\)</td><td>\(b\)</td></tr>
+<tr><td>2</td><td>\((a,\{a,a\})\)</td><td>\(c\)</td></tr>
+<tr><td>3</td><td>\((a,\{a,a\})\)</td><td>\(c\)</td></tr>
+<tr><td>4</td><td>\((a,\{a\})\)</td><td>\(b\)</td></tr>
+</table>
+
+<h4>(c) Round 2</h4>
+<table>
+<tr><th>Node</th><th>Signature</th><th>New color</th></tr>
+<tr><td>1</td><td>\((b,\{c\})\)</td><td>\(d\)</td></tr>
+<tr><td>2</td><td>\((c,\{b,c\})\)</td><td>\(e\)</td></tr>
+<tr><td>3</td><td>\((c,\{b,c\})\)</td><td>\(e\)</td></tr>
+<tr><td>4</td><td>\((b,\{c\})\)</td><td>\(d\)</td></tr>
+</table>
+
+<h4>(d) Stabilized?</h4>
+<p>Yes. The partition \(\{1,4\}\) and \(\{2,3\}\) did not change from round 1 to round 2.</p>
+
+<h4>(e) Same-color nodes</h4>
+<p>Nodes 1 and 4 are the endpoints with degree 1 and share one color. Nodes 2 and 3 are interior nodes with degree 2 and share another color. This matches the path's reflection symmetry \(1\leftrightarrow4\), \(2\leftrightarrow3\).</p>
+
+<!-- P6 -->
+<h3 id="p6">Problem 6. 1-WL on a cycle graph</h3>
+<p>Cycle \(C_4\): \(1-2-3-4-1\), all start with color \(a\).</p>
+
+<h4>(a) Two rounds</h4>
+<p>Round 1: every node has degree 2 and signature \((a,\{a,a\})\) &rarr; all get color \(b\).<br>
+Round 2: every node has signature \((b,\{b,b\})\) &rarr; all get color \(c\). Same single-class partition.</p>
+
+<h4>(b) What happens</h4>
+<p>Colors rename but the partition into one class never changes. The process stabilizes after round 1.</p>
+
+<h4>(c) Why 1-WL cannot distinguish nodes</h4>
+<p>\(C_4\) is vertex-transitive: every node has the exact same local structure at every depth. Since 1-WL only looks at the current color together with the multiset of neighbor colors, and this pair is identical for all nodes, no refinement occurs.</p>
+
+<!-- P7 -->
+<h3 id="p7">Problem 7. Compare \(P_4\) vs \(C_4\)</h3>
+
+<h4>(a)-(b) Multisets per round</h4>
+<table>
+<tr><th>Round</th><th>\(P_4\)</th><th>\(C_4\)</th></tr>
+<tr><td>0</td><td>\(\{a,a,a,a\}\)</td><td>\(\{a,a,a,a\}\)</td></tr>
+<tr><td>1</td><td>\(\{b,b,c,c\}\)</td><td>\(\{b',b',b',b'\}\)</td></tr>
+<tr><td>2</td><td>\(\{d,d,e,e\}\)</td><td>\(\{c',c',c',c'\}\)</td></tr>
+</table>
+
+<h4>(c) When distinguished</h4>
+<p>Round 1. At that stage \(P_4\) has two color classes while \(C_4\) has only one, so their multisets of colors already differ.</p>
+
+<h4>(d) Why multiset comparison is natural</h4>
+<p>Isomorphic graphs have a node bijection that preserves adjacency, so their WL color multisets must match. If they ever differ, the graphs cannot be isomorphic.</p>
+
+<!-- P8 -->
+<h3 id="p8">Problem 8. \(C_6\) vs two triangles</h3>
+
+<h4>(a) Degrees</h4>
+<p>Every node has degree 2 in both \(G_3=C_6\) and \(G_4=K_3\sqcup K_3\).</p>
+
+<h4>(b)-(c) Two WL rounds</h4>
+<p>Round 1: all nodes get signature \((a,\{a,a\})\) &rarr; one color. Round 2: \((b,\{b,b\})\) &rarr; still one color. Both graphs: single class of size 6.</p>
+
+<h4>(d) Distinguished?</h4>
+<p>No. 1-WL produces identical color multisets for both graphs.</p>
+
+<h4>(e) Warning for MPNNs</h4>
+<p>Standard sum or mean aggregation MPNNs are at most as expressive as 1-WL according to the Jegelka survey. If 1-WL fails, the MPNN fails too. The fact that \(C_6\) is connected while \(K_3\sqcup K_3\) is not is a fundamental structural difference, yet local message passing cannot detect it.</p>
+
+<!-- P9 -->
+<h3 id="p9">Problem 9. Manual GNN vs 1-WL</h3>
+<p>Update: \(h_v^{(t)}=h_v^{(t-1)}+\sum_{u\in\mathcal N(v)}h_u^{(t-1)}\), all \(h_v^{(0)}=1\).</p>
+
+<h4>(a) \(h^{(1)}\)</h4>
+<p>Every node has degree 2: \(h_v^{(1)}=1+1+1=3\) for all \(v\), in both \(G_3\) and \(G_4\).</p>
+
+<h4>(b) \(h^{(2)}\)</h4>
+<p>\(h_v^{(2)}=3+3+3=9\) for all \(v\), in both graphs.</p>
+
+<h4>(c) Observation</h4>
+<p>The GNN yields identical representations in both graphs at every round, so it cannot distinguish them, just as 1-WL cannot.</p>
+
+<h4>(d) Intuitive connection</h4>
+<p>Both 1-WL and sum-aggregation GNNs update each node by combining its state with a permutation-invariant summary of neighbors. When all local neighborhoods are identical, for example in regular graphs, both procedures produce identical outputs. This is the "GNN &le; 1-WL" expressiveness result.</p>
+
+<!-- P10 -->
+<h3 id="p10">Problem 10. Permutation invariance</h3>
+
+<h4>(a)</h4>
+<p>Relabeling permutes node indices. The adjacency matrix changes from \(A\) to \(PAP^\top\) but the underlying graph is identical.</p>
+
+<h4>(b)</h4>
+<p>A graph's class depends on structure, not on arbitrary node numbering. The model must give the same output regardless of how nodes are indexed.</p>
+
+<h4>(c) Invariant readout</h4>
+<p>\(\text{readout}=\sum_v h_v^{(T)}\). Summation is commutative, so it is permutation invariant. Mean and max pooling also work.</p>
+
+<h4>(d) Non-invariant readout</h4>
+<p>Output only \(h_1^{(T)}\) depends on which node is labeled "1."</p>
+
+<!-- P11 -->
+<h3 id="p11">Problem 11. Sum aggregation</h3>
+
+<h4>(a)</h4><p>A multiset is like a set but allows repeated elements: \(\{a,a,b\}\neq\{a,b\}\).</p>
+<h4>(b)</h4><p>Multiple neighbors can share the same feature, so neighborhoods are naturally multisets.</p>
+<h4>(c)</h4><p>Sum is order-invariant and fixed-size regardless of degree. Concatenation depends on ordering and degree.</p>
+<h4>(d)</h4><p>\(\{1,1,1\}\) and \(\{1\}\) both have mean 1 but sums 3 vs 1. Sum preserves degree information that mean normalizes away.</p>
+
+<!-- P12 -->
+<h3 id="p12">Problem 12. Computation trees</h3>
+
+<h4>(a) Depth-2 tree at node 2</h4>
+<pre> [2] depth 0
+ / \
+ [1] [3] depth 1
+ | / \
+ [2] [2] [4] depth 2</pre>
+<p><em>Comment: I couldnt get this to format nicely but 3 goes to the irght 2 and 4.</em></p>
+
+<h4>(b)</h4><p>Nodes \(\{1,2,3,4\}\) all appear in the tree. Node 2 appears several times as separate copies at deeper levels.</p>
+<h4>(c)</h4><p>If two nodes have isomorphic computation trees, the GNN computes the same function on both, so it cannot distinguish them.</p>
+<h4>(d)</h4><p>Global properties such as connectivity and diameter can lie outside any node's local tree, so finite-depth message passing cannot detect them.</p>
+
+<!-- P13 -->
+<h3 id="p13">Problem 13. Limits of message passing</h3>
+<h4>(a)</h4><p>Diameter is the longest shortest path between any two nodes, so it is an inherently global quantity. A \(t\)-hop receptive field cannot see beyond radius \(t\), so short message passing cannot encode the full diameter.</p>
+<h4>(b)</h4><p>Counting long cycles requires seeing how the cycle closes globally, but 1-WL-equivalent MPNNs cannot distinguish regular graphs that differ only in cycle structure.</p>
+<h4>(c)</h4><p>A local property is something like node degree, which you read off a neighborhood. A global property is something like whether the graph is connected, which depends on the entire structure.</p>
+<h4>(d)</h4><p>A shallow GNN handles degree-based tasks easily but will likely fail on tasks that require true connectivity or diameter information.</p>
+
+<!-- P14 -->
+<h3 id="p14">Problem 14. Higher-order ideas</h3>
+<h4>(a)</h4><p>Node pairs can directly encode relational structure such as shared neighbors or specific paths, while single-node representations must infer those relations only indirectly.</p>
+<h4>(b)</h4><p>The number of states scales as \(O(n^k)\) when you color \(k\)-tuples of nodes, which becomes impractical for large graphs.</p>
+<h4>(c)</h4><p>There is a direct tension: more expressive models cost more. Practical research therefore looks for middle-ground approaches, including subgraph GNNs and local higher-order methods.</p>
+
+<!-- P15 -->
+<h3 id="p15">Problem 15. Build the Laplacian</h3>
+
+<h4>(a) \(A\)</h4>
+<p>Path graph \(1-2-3-4\):</p>
+\[A=\begin{bmatrix}
+0 & 1 & 0 & 0\\
+1 & 0 & 1 & 0\\
+0 & 1 & 0 & 1\\
+0 & 0 & 1 & 0
+\end{bmatrix}.\]
+
+<h4>(b) \(D\)</h4>
+\[D=\operatorname{diag}(1,2,2,1).\]
+
+<h4>(c) \(L=D-A\)</h4>
+\[L=\begin{bmatrix}1&-1&0&0\\-1&2&-1&0\\0&-1&2&-1\\0&0&-1&1\end{bmatrix}.\]
+
+<h4>(d) Verify \(L\mathbf 1=0\)</h4>
+\[L\mathbf 1=\begin{bmatrix}1-1\\-1+2-1\\-1+2-1\\-1+1\end{bmatrix}=\begin{bmatrix}0\\0\\0\\0\end{bmatrix}.\]
+<p>The constant vector is an eigenvector with eigenvalue 0: if all nodes have the same value, there is no local disagreement.</p>
+
+<!-- P16 -->
+<h3 id="p16">Problem 16. Laplacian as difference operator</h3>
+<p>\(f=(1,3,3,1)^\top\).</p>
+
+<h4>(a) Compute \(Lf\)</h4>
+\[(Lf)_1=1(1)-1(3)=-2,\quad (Lf)_2=-1(1)+2(3)-1(3)=2,\]
+\[(Lf)_3=-1(3)+2(3)-1(1)=2,\quad (Lf)_4=-1(3)+1(1)=-2.\]
+\[Lf=(-2,2,2,-2)^\top.\]
+
+<h4>(b) Interpretation</h4>
+<p>\((Lf)_i=\sum_{j\sim i}(f_i - f_j)\) measures how much node \(i\) exceeds its neighbors. Nodes 2 and 3 are local peaks with value \(+2\); nodes 1 and 4 are local valleys with value \(-2\).</p>
+
+<h4>(c) Flat vs different</h4>
+<p>No node is perfectly flat. Having \(Lf=0\) would mean each node matches its neighbors. Nodes 2 and 3 behave like peaks and nodes 1 and 4 like valleys.</p>
+
+<!-- P17 -->
+<h3 id="p17">Problem 17. Adjacency vs Laplacian mixing</h3>
+
+<h4>(a) \(Af\)</h4>
+\[Af=(3,4,4,3)^\top.\]
+
+<h4>(b) Comparison</h4>
+<p>\(Lf=Df-Af=(1,6,6,1)^\top-(3,4,4,3)^\top=(-2,2,2,-2)^\top\). Checks out.</p>
+
+<h4>(c) Difference</h4>
+<p>\(A\) is a <strong>mixing</strong> operator: it replaces each node's value with the sum of its neighbors. \(L\) is a <strong>contrast</strong> operator: it measures how much each node differs from its neighbors. In GNN terms, \(A\) corresponds to the aggregation step, while \(L\) relates to measuring local smoothness from a spectral viewpoint.</p>
+
+<!-- P18 -->
+<h3 id="p18">Problem 18. A first spectral filter</h3>
+<p>\(g=(I-\alpha L)f\), \(\alpha=\tfrac12\).</p>
+
+<h4>(a) Compute</h4>
+\[\tfrac12 Lf=(-1,1,1,-1)^\top,\]
+\[g=f-\tfrac12 Lf=(1,3,3,1)^\top-(-1,1,1,-1)^\top=(2,2,2,2)^\top.\]
+
+<h4>(b) More or less similar?</h4>
+<p>More similar. The original \(f\) ranges from 1 to 3; after filtering, \(g\) is perfectly constant at 2. The filter smoothed the signal completely.</p>
+
+<h4>(c) Why useful</h4>
+<p>Graph signals often exhibit homophily, meaning connected nodes tend to have similar features or labels. Smoothing reduces noise and encourages similar representations for neighboring nodes. That behavior acts like graph-structure-aware regularization.</p>
+
+<h4>(d) Connection to message passing</h4>
+<p>\(g=(I-\alpha L)f = (1-\alpha D)f + \alpha Af\): a weighted mix of a node's own feature and the sum of its neighbors' features. This is exactly one linear message-passing layer. Spectral filtering with a first-order polynomial in \(L\) is mathematically equivalent to one GNN round.</p>
+
+<!-- P20 -->
+<h3 id="p20">Problem 20. Population vs empirical risk</h3>
+<h4>(a)</h4><p>Empirical risk is the average loss on training graphs. Population risk is the expected loss over the true distribution of graphs. The gap between them is the generalization error.</p>
+<h4>(b)</h4><p>Overfitting means the model memorizes patterns that are specific to the training graphs instead of learning rules that generalize.</p>
+<h4>(c)</h4><p>Graphs vary in size, degree, and motifs. A model trained on small graphs may therefore face entirely different structural regimes at test time.</p>
+
+<!-- P21 -->
+<h3 id="p21">Problem 21. Extrapolation and graph size</h3>
+<h4>(a)</h4><p>Larger graphs introduce longer-range dependencies and structural patterns absent from training data. Statistics of learned features can shift.</p>
+<h4>(b)</h4><p>If local neighborhoods look similar across graph sizes, the GNN can transfer what it learned, because locality is the key inductive bias.</p>
+<h4>(c)</h4><p>The model may have learned shortcuts that only work at training scale, such as implicitly assuming small graphs are always connected, and those shortcuts break on larger graphs.</p>
+
+<!-- P22 -->
+<h3 id="p22">Problem 22. Algorithmic alignment</h3>
+<h4>(a)</h4><p>An architecture is "aligned" with a task when its computation mirrors the steps of an algorithm that solves the task.</p>
+<h4>(b)</h4><p>Bellman-Ford iteratively relaxes distances via neighbor updates, which is exactly what message passing implements at each step.</p>
+<h4>(c)</h4><p>Label propagation and diffusion processes on graphs are naturally expressed as iterative neighbor aggregation.</p>
+
+<!-- Reflection -->
+<h3 id="reflection">Part VI. Reflection (10 pts)</h3>
+<p>The realization that both 1-WL and my toy GNN would fail to distinguish the graphs and the union of two triangles came as a surprise. In each case, there is a very different global topology, path vs. two disjoint edges, but all nodes look identical at the local level. Each node has degree 2, and their neighbors have degree 2 too. This really helped me see just how severely local aggregation is limited. It reinforced for me why people study higher-order architectures.</p>
+<p>I also appreciate the Laplacian portion of the course. Each matrix is an example of a way you can combine the neighborhood information of a message-passing algorithm like GNNs, whereas each measure of local disagreement is similar to how a sharpening filter works, and finally each spectral filter will blur the input signal roughly similarly to how a single linear GNN layer blurs the input signal.</p>
+<p>In addition, I now realize why the choices made during Lecture 15 affect what can be represented by the model. Sum or average aggregation, whether we use a residual connection, and which non-linear activation function we choose are not simply engineering choices. They directly affect what can and cannot be represented by the network.</p>
+<p>This assignment turned GNNs from "black boxes" into open, structured algorithms where I could reason about them using mathematics.</p>
+
+</main>
+</body>
+</html>
